@@ -7,6 +7,9 @@ describe("time helpers", () => {
     expect(fmtClock(61)).toBe("1:01");
     expect(fmtClock(761)).toBe("12:41");
   });
+  test("fmtClock clamps negative input (timer-start race)", () => {
+    expect(fmtClock(-1)).toBe("0:00");
+  });
   test("fmtMin formats human durations", () => {
     expect(fmtMin(55)).toBe("55m");
     expect(fmtMin(60)).toBe("1h");

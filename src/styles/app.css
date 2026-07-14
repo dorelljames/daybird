@@ -32,12 +32,13 @@ input { font: inherit; color: inherit; }
 .task {
   display: flex; align-items: center; gap: var(--sp-3);
   background: var(--surface);
+  border: 1.5px solid transparent;
   border-radius: var(--radius-m);
   padding: var(--sp-3) var(--sp-4);
   box-shadow: var(--shadow-1);
 }
-.task-selected { box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-1); }
-.task-active { box-shadow: 0 0 0 1.5px var(--accent), var(--shadow-2); }
+.task-selected { border-color: var(--accent-soft); }
+.task-active { border-color: var(--accent); box-shadow: var(--shadow-2); }
 .task-check {
   width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
   border: 1.5px solid var(--ink-3);
@@ -61,7 +62,7 @@ input { font: inherit; color: inherit; }
   font-size: 10px; color: var(--ink-2);
   opacity: 0; transition: opacity 0.15s, background 0.15s;
 }
-.task:hover .task-play, .task:hover .task-drop, .task-play.is-active { opacity: 1; }
+.task:hover .task-play, .task:hover .task-drop { opacity: 1; }
 .task-play.is-active { background: var(--accent); color: #fff; }
 .task-play:hover { background: var(--accent-soft); color: var(--accent); }
 .task-play.is-active:hover { background: var(--accent); color: #fff; }
@@ -81,10 +82,11 @@ input { font: inherit; color: inherit; }
 .composer input {
   width: 100%;
   background: var(--surface);
-  border: none; outline: none;
+  border: 2px solid var(--accent);
+  outline: none;
   border-radius: var(--radius-m);
   padding: var(--sp-3) var(--sp-4);
-  box-shadow: 0 0 0 2px var(--accent), var(--shadow-2);
+  box-shadow: var(--shadow-2);
   font-size: 14px;
 }
 

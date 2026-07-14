@@ -1,8 +1,9 @@
 export const MIN = 60_000;
 
 export function fmtClock(totalSec: number): string {
-  const m = Math.floor(totalSec / 60);
-  const s = Math.floor(totalSec % 60);
+  const t = Math.max(0, totalSec);
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60);
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
