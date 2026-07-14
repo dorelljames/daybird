@@ -39,12 +39,12 @@ describe("task state", () => {
     expect(overdueTasks(store.getState(), NOW).map((t) => t.id)).not.toContain("t-dev-4563");
     expect(todayTasks(store.getState(), NOW).map((t) => t.id)).toContain("t-dev-4563");
   });
-  test("addTask appends a todo scheduled today", () => {
+  test("addTask prepends a todo at the top of today", () => {
     store.getState().addTask("New thing", 25, NOW);
     const t = store.getState().tasks.at(-1)!;
     expect(t.title).toBe("New thing");
     expect(t.status).toBe("todo");
-    expect(todayTasks(store.getState(), NOW).map((x) => x.id)).toContain(t.id);
+    expect(todayTasks(store.getState(), NOW)[0].id).toBe(t.id);
   });
 });
 

@@ -140,7 +140,7 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
           estimateMin,
           scheduledFor: dayKey(now),
           status: "todo",
-          sortOrder: Math.max(0, ...s.tasks.map((t) => t.sortOrder)) + 1,
+          sortOrder: Math.min(0, ...s.tasks.map((t) => t.sortOrder)) - 1,
         },
       ],
     })),

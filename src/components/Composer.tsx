@@ -8,11 +8,13 @@ export default function Composer() {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => { if (s.composerOpen) ref.current?.focus(); }, [s.composerOpen]);
 
+  // Enter adds and keeps the field open for rapid entry (Esc closes) — closing
+  // on submit collapsed the composer and shifted the whole list mid-animation.
   function submit() {
     const t = title.trim();
     if (t) s.addTask(t);
     setTitle("");
-    s.setComposer(false);
+    ref.current?.focus();
   }
 
   return (
