@@ -85,6 +85,12 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
             <span className="task-est">{worked > 0 ? `${fmtMin(worked)} / ` : ""}{fmtMin(task.estimateMin)}</span>
           )
         )}
+        {task.priority && (
+          <span className={`task-flag-static ${task.priority === "high" ? "is-high" : "is-later"}`}>⚑</span>
+        )}
+      </div>
+
+      <div className="task-actions">
         {task.status === "todo" && (
           <button
             className={`task-flag ${task.priority === "high" ? "is-high" : ""} ${task.priority === "later" ? "is-later" : ""}`}
