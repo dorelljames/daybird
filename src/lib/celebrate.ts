@@ -22,3 +22,17 @@ export function playCompletionSound(s: DaybirdState, taskId: string, now: number
   if (cue.kind === "all-done") sfx.allDone();
   else sfx.complete(cue.step);
 }
+
+export type ResolveCue = "worked" | "rested" | "skipped";
+
+// The idle sheet's mood follows the dominant allocation; ties take the kinder
+// reading (worked > rested > skipped). Rest never sounds like failure.
+export function resolveCue(taskMin: number, breakMin: number, skipMin: number): ResolveCue {
+  if (taskMin >= breakMin && taskMin >= skipMin && taskMin > 0) return "worked";
+  if (breakMin >= skipMin && breakMin > 0) return "rested";
+  return "skipped";
+}
+
+export function playResolveSound(taskMin: number, breakMin: number, skipMin: number) {
+  sfx.resolve(resolveCue(taskMin, breakMin, skipMin));
+}

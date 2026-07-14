@@ -102,11 +102,22 @@ export const sfx = {
   add() {
     blip({ freq: 720, type: "triangle", dur: 0.05, vol: 0.07 });
   },
-  /** Idle sheet resolved — settling cadence. */
-  resolve() {
-    blip({ freq: 660, dur: 0.06, vol: 0.09 });
-    blip({ freq: 520, dur: 0.06, vol: 0.09, delay: 0.07 });
-    blip({ freq: 440, dur: 0.1, vol: 0.08, delay: 0.14 });
+  /** Idle sheet resolved — mood follows what the time became. */
+  resolve(cue: "worked" | "rested" | "skipped" = "worked") {
+    if (cue === "worked") {
+      // descending major triad: accounted for, banked
+      note(783.99, { vol: 0.09, dur: 0.14 });
+      note(659.25, { delay: 0.08, vol: 0.09, dur: 0.14 });
+      note(523.25, { delay: 0.16, vol: 0.1, dur: 0.22 });
+    } else if (cue === "rested") {
+      // an exhale: two slow soft notes
+      note(659.25, { vol: 0.07, dur: 0.2 });
+      note(523.25, { delay: 0.11, vol: 0.07, dur: 0.28 });
+    } else {
+      // brief low acknowledgment, no ceremony
+      tap(0.04, 1200);
+      note(261.63, { vol: 0.07, dur: 0.12 });
+    }
   },
   /** Reorder drop — soft thunk. */
   drop() {
