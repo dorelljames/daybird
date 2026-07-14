@@ -1,7 +1,43 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { fmtClock } from "../lib/time";
+
+// Long titles glide to reveal their end (pause → drift → pause → back);
+// short titles stay put. Fade masks replace hard clipping while moving.
+function MarqueeTitle({ text }: { text: string }) {
+  const outerRef = useRef<HTMLSpanElement>(null);
+  const innerRef = useRef<HTMLSpanElement>(null);
+  const [dist, setDist] = useState(0);
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    const measure = () => setDist(Math.max(0, inner.scrollWidth - outer.clientWidth));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, [text]);
+
+  return (
+    <motion.span layout="position" ref={outerRef} className={`w-title w-marquee ${dist > 0 ? "is-overflow" : ""}`}>
+      <motion.span
+        ref={innerRef}
+        className="w-marquee-inner"
+        animate={dist > 0 ? { x: [0, 0, -dist, -dist] } : { x: 0 }}
+        transition={
+          dist > 0
+            ? { duration: Math.max(6, dist / 25 + 4), times: [0, 0.3, 0.7, 1], repeat: Infinity, repeatType: "reverse", ease: "linear" }
+            : undefined
+        }
+      >
+        {text}
+      </motion.span>
+    </motion.span>
+  );
+}
 
 interface WidgetState {
   title: string;
@@ -51,9 +87,7 @@ export default function WidgetApp() {
               <motion.span key="dot" layoutId="w-ind" className="w-ind w-ind-dot" transition={morph} />
             )}
             <div className="w-col">
-              <motion.span layout="position" className="w-title" transition={morph}>
-                {st.title}
-              </motion.span>
+              <MarqueeTitle text={st.title} />
               <AnimatePresence initial={false}>
                 {hover && (
                   <motion.div
