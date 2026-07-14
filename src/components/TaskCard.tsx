@@ -22,14 +22,25 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
   const project = s.projects.find((p) => p.id === task.projectId);
   const terminal = task.status !== "todo";
 
+  // Reorder.Item owns layout + y-transforms internally; animating y/height/layout
+  // on it from outside fights its projection and stutters. Opacity only there.
   const rootProps = {
-    layout: true as const,
-    initial: { opacity: 0, y: 8 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, height: 0, marginBottom: -8 },
-    transition: { type: "spring", stiffness: 400, damping: 30 } as const,
     className: `task ${active ? "task-active" : ""} ${terminal ? `task-${task.status}` : ""} ${selected ? "task-selected" : ""}`,
     onClick: () => s.setSelected(task.id),
+    ...(reorderable
+      ? {
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0 },
+          transition: { duration: 0.15 } as const,
+        }
+      : {
+          layout: true as const,
+          initial: { opacity: 0, y: 8 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, height: 0, marginBottom: -8 },
+          transition: { type: "spring", stiffness: 400, damping: 30 } as const,
+        }),
   };
 
   const inner = (
