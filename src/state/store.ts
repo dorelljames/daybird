@@ -1,7 +1,9 @@
 import { create, StateCreator } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { Project, Task, TimeEntry } from "../types";
 import { seedEntries, seedProjects, seedTasks } from "../mock/seed";
 import { dayKey, MIN } from "../lib/time";
+import { closeStaleOpenEntries } from "../lib/hydrate";
 
 export type View = "today" | "upcoming" | "projects" | "log";
 export interface IdleSpan { start: number; end: number; }
@@ -198,4 +200,26 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
   setComposer: (composerOpen) => set({ composerOpen }),
 });
 
-export const useDaybird = create<DaybirdState>()(storeCreator);
+export const useDaybird = create<DaybirdState>()(
+  persist(storeCreator, {
+    name: "daybird-v1",
+    storage: createJSONStorage(() => localStorage),
+    partialize: (s) => ({
+      projects: s.projects,
+      tasks: s.tasks,
+      entries: s.entries,
+      activeTaskId: s.activeTaskId,
+      railOpen: s.railOpen,
+    }),
+  })
+);
+
+// Post-hydration safety: close timers forgotten on previous days, and clear the
+// active task if its entry got closed by that guard.
+useDaybird.setState((s) => {
+  const entries = closeStaleOpenEntries(s.entries, Date.now());
+  return {
+    entries,
+    activeTaskId: entries.some((e) => e.end === null) ? s.activeTaskId : null,
+  };
+});

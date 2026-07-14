@@ -25,6 +25,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
   // Reorder.Item owns layout + y-transforms internally; animating y/height/layout
   // on it from outside fights its projection and stutters. Opacity only there.
   const rootProps = {
+    "data-task-id": task.id,
     className: `task ${active ? "task-active" : ""} ${terminal ? `task-${task.status}` : ""} ${selected ? "task-selected" : ""}`,
     onClick: () => s.setSelected(task.id),
     ...(reorderable
