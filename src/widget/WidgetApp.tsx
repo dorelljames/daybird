@@ -138,8 +138,10 @@ export default function WidgetApp() {
             onClick={() => emit("daybird://cmd", { cmd: "open" })}
             onPointerDown={dragOnMove}
           >
-            <span className="w-ind w-ind-dot w-dot-idle" />
-            <span className="w-title w-title-idle">Not tracking</span>
+            <span className="w-head">
+              <span className="w-ind w-ind-dot w-dot-idle" />
+              <span className="w-title w-title-idle">Not tracking</span>
+            </span>
           </button>
         </div>
       </MotionConfig>
