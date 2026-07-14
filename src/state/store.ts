@@ -36,6 +36,8 @@ export interface DaybirdState {
   toggleSound(): void;
   helpOpen: boolean;
   setHelp(open: boolean): void;
+  dismissedUpdate: string | null;
+  dismissUpdate(version: string): void;
   toast: Toast | null;
   undoSnapshot: UndoSnapshot | null;
   toggleDone(id: string, now?: number): void;
@@ -91,6 +93,8 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
   toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
   helpOpen: false,
   setHelp: (helpOpen) => set({ helpOpen }),
+  dismissedUpdate: null,
+  dismissUpdate: (dismissedUpdate) => set({ dismissedUpdate }),
   toast: null,
   undoSnapshot: null,
 
@@ -305,6 +309,7 @@ export const useDaybird = create<DaybirdState>()(
       activeTaskId: s.activeTaskId,
       railOpen: s.railOpen,
       soundOn: s.soundOn,
+      dismissedUpdate: s.dismissedUpdate,
     }),
   })
 );

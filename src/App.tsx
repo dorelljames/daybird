@@ -12,6 +12,7 @@ import Dock from "./components/Dock";
 import LogView from "./components/LogView";
 import PlaceholderView from "./components/PlaceholderView";
 import ShortcutsSheet from "./components/ShortcutsSheet";
+import UpdateBanner from "./components/UpdateBanner";
 import { useDaybird, View } from "./state/store";
 import { openEntry, todayTasks, workedMinToday } from "./state/selectors";
 import { dayKey, MIN } from "./lib/time";
@@ -236,6 +237,7 @@ export default function App() {
       <Dock now={now} />
       <IdleSheet />
       <ShortcutsSheet />
+      <UpdateBanner />
       <Toast />
     </div>
     </MotionConfig>
