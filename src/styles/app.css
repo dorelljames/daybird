@@ -21,7 +21,7 @@ input { font: inherit; color: inherit; }
   overflow-y: auto;
   padding: var(--sp-4) var(--sp-6) 96px;
 }
-.shell-main > .content { max-width: 560px; margin: 0 auto; }
+.shell-main .content { max-width: 560px; margin: 0 auto; }
 
 /* === today === */
 .today-head { margin-bottom: var(--sp-5); }
