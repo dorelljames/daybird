@@ -32,3 +32,6 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+
+# Local signing credentials
+.env.signing
