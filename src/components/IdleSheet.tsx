@@ -183,22 +183,24 @@ export default function IdleSheet() {
           </div>
 
           <div className={`split-bar ${dragging ? "dragging" : ""}`} ref={barRef}>
-            {segs.map((seg, i) => (
-              <div
-                key={i}
-                className={`seg ${isUnassigned(seg) ? "seg-unassigned" : ""}`}
-                style={{ flexGrow: Math.max(fractions[i], 0.001), background: segColor(seg, i) }}
-                onClick={() => { setPicker(picker === i ? null : i); setDraft(null); }}
-                title={segTitle(seg)}
-              >
-                {mins[i] > 0 && fractions[i] > 0.09 && (
-                  <>
-                    <span className="seg-min">{mins[i]}m</span>
-                    <span className="seg-label">{segTitle(seg)}</span>
-                  </>
-                )}
-              </div>
-            ))}
+            <div className="split-track">
+              {segs.map((seg, i) => (
+                <div
+                  key={i}
+                  className={`seg ${isUnassigned(seg) ? "seg-unassigned" : ""}`}
+                  style={{ flexGrow: Math.max(fractions[i], 0.001), background: segColor(seg, i) }}
+                  onClick={() => { setPicker(picker === i ? null : i); setDraft(null); }}
+                  title={segTitle(seg)}
+                >
+                  {mins[i] > 0 && fractions[i] > 0.09 && (
+                    <>
+                      <span className="seg-min">{mins[i]}m</span>
+                      <span className="seg-label">{segTitle(seg)}</span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
             {pos.map((p, i) => (
               <div key={`h${i}`} className="split-handle" style={{ left: `${p * 100}%` }} onPointerDown={dragBoundary(i)} />
             ))}
