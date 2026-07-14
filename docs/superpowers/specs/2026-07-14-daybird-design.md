@@ -19,6 +19,9 @@ A local-first macOS productivity app replacing Super Productivity for one user (
 - **Linear** issue sync (pull assigned issues; configurable completion writeback).
 - **Apple Calendar** sync of an auto-scheduled day plan (past = actuals, future = plan) so upcoming tasks glance on Apple Watch via the standard calendar complication.
 - **Discard (drop) tasks** without deleting them — a first-class terminal state Super Productivity lacks.
+- **Keyboard-first UX**: every daily action (add, start/stop, done, drop, snooze, navigate) reachable without the mouse; the shortcut map is designed hands-on during the UX build.
+- **Google Inbox-inspired cleanup**: snooze, a one-gesture **Sweep** for the Overdue pile, and a rewarding "all clear" zero state — designed during the UX build.
+- **Upcoming as a calendar view**: month/agenda of scheduled tasks *plus* real calendar events (EventKit read) so "what's coming in my life" is one glance, Google Calendar-style. Layout designed during the UX build.
 
 **Non-goals (v1):** multi-device sync, mobile/web clients, habits, boards, brain dump, dashboards, Pomodoro, task creation in Linear, watchOS app (calendar covers it).
 
