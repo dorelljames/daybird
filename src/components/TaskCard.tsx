@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { motion, Reorder } from "motion/react";
 import { Task } from "../types";
 import { useDaybird } from "../state/store";
@@ -15,7 +16,14 @@ interface Props {
 export default function TaskCard({ task, now, selected, reorderable = false }: Props) {
   const s = useDaybird();
   const alt = useAltKey();
+  const [editing, setEditing] = useState(false);
+  const editRef = useRef<HTMLInputElement>(null);
   const active = s.activeTaskId === task.id;
+
+  function commitEdit() {
+    if (editRef.current) s.renameTask(task.id, editRef.current.value);
+    setEditing(false);
+  }
   const open = s.entries.find((e) => e.end === null && e.taskId === task.id);
   const elapsedSec = open ? Math.max(0, Math.floor((now - open.start) / 1000)) : 0;
   const worked = workedMinToday(s, task.id, now);
@@ -68,8 +76,24 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
         {task.status === "dropped" && <span className="task-x">×</span>}
       </motion.button>
 
-      <div className="task-body">
-        <div className="task-title">{task.title}</div>
+      <div className="task-body" onDoubleClick={(e) => { e.stopPropagation(); if (task.status === "todo") setEditing(true); }}>
+        {editing ? (
+          <input
+            ref={editRef}
+            className="task-edit"
+            defaultValue={task.title}
+            autoFocus
+            onFocus={(e) => e.currentTarget.select()}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitEdit();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <div className="task-title"><span className="task-title-text">{task.title}</span></div>
+        )}
         <div className="task-meta">
           {project && <span className="task-dot" style={{ background: project.color }} />}
           {task.linearId && <span className="task-linear">{task.linearId}</span>}
@@ -130,7 +154,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
   );
 
   return reorderable ? (
-    <Reorder.Item value={task.id} {...rootProps}>{inner}</Reorder.Item>
+    <Reorder.Item value={task.id} dragListener={!editing} {...rootProps}>{inner}</Reorder.Item>
   ) : (
     <motion.div {...rootProps}>{inner}</motion.div>
   );

@@ -14,6 +14,7 @@ export default function IdleSheet() {
   const s = useDaybird();
   const barRef = useRef<HTMLDivElement>(null);
   const [bounds, setBounds] = useState<[number, number]>([0.4, 0.8]);
+  const [dragging, setDragging] = useState(false);
   const activeTask = s.tasks.find((t) => t.id === s.activeTaskId);
 
   // re-initialize the split each time the sheet opens; no task segment when idle hit with no timer
@@ -33,6 +34,7 @@ export default function IdleSheet() {
       const rect = bar.getBoundingClientRect();
       const target = e.currentTarget as HTMLElement;
       target.setPointerCapture(e.pointerId);
+      setDragging(true);
       const move = (ev: PointerEvent) => {
         const f = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
         setBounds(([b1, b2]) =>
@@ -40,6 +42,7 @@ export default function IdleSheet() {
         );
       };
       const up = () => {
+        setDragging(false);
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
       };
@@ -68,7 +71,7 @@ export default function IdleSheet() {
           <div className="sheet-title">Welcome back 👋</div>
           <div className="sheet-sub">You were away for {total} minutes</div>
 
-          <div className="split-bar" ref={barRef}>
+          <div className={`split-bar ${dragging ? "dragging" : ""}`} ref={barRef}>
             {SEGMENTS.map((seg, i) => (
               <div key={seg.key} className={`seg ${seg.cls}`} style={{ flexGrow: Math.max(fractions[i], 0.001) }}>
                 {mins[i] > 0 && fractions[i] > 0.09 && (

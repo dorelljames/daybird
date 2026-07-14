@@ -36,6 +36,7 @@ input { font: inherit; color: inherit; }
   border-radius: var(--radius-m);
   padding: var(--sp-3) var(--sp-4);
   box-shadow: var(--shadow-1);
+  transition: opacity 0.25s ease, border-color 0.2s ease, box-shadow 0.25s var(--ease-out-quart);
 }
 .task-selected { border-color: var(--accent-soft); }
 .task-active { border-color: var(--accent); box-shadow: var(--shadow-2); }
@@ -50,6 +51,20 @@ input { font: inherit; color: inherit; }
 .task-x { color: var(--ink-3); font-size: 13px; }
 .task-body { flex: 1; min-width: 0; }
 .task-title { font-size: 14px; line-height: 1.35; }
+/* strikethrough draws itself across the title on complete/drop */
+.task-title-text {
+  color: var(--ink);
+  background-image: linear-gradient(var(--ink-3), var(--ink-3));
+  background-repeat: no-repeat;
+  background-position: 0 0.62em;
+  background-size: 0% 1.5px;
+  transition: background-size 0.3s var(--ease-out-quart) 0.1s, color 0.25s ease;
+}
+.task-edit {
+  width: 100%; background: none; border: none; outline: none;
+  font-size: 14px; line-height: 1.35; color: var(--ink);
+  border-bottom: 1.5px solid var(--accent); padding-bottom: 1px;
+}
 .task-meta { display: flex; align-items: center; gap: var(--sp-2); color: var(--ink-3); font-size: 11px; margin-top: 2px; }
 .task-dot { width: 7px; height: 7px; border-radius: 50%; }
 .task-linear { color: var(--ink-2); font-weight: 500; }
@@ -76,14 +91,17 @@ input { font: inherit; color: inherit; }
   width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; color: var(--ink-2);
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s ease;
 }
 .task-flag {
   width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; color: var(--ink-3);
-  transition: color 0.15s;
+  transition: color 0.15s, transform 0.1s ease;
 }
+.task-play:active, .task-drop:active { transform: scale(0.88); }
+.task-flag:active { transform: scale(0.88); }
+.task-flag.is-later:active { transform: rotate(90deg) scale(0.88); }
 .task-flag:hover { background: var(--priority-soft); color: var(--priority); }
 .task-flag.is-high { color: var(--priority); }
 .task-flag.is-later { color: var(--ink-3); transform: rotate(90deg); }
@@ -92,9 +110,28 @@ input { font: inherit; color: inherit; }
 .task-play:hover { background: var(--accent-soft); color: var(--accent); }
 .task-play.is-active:hover { background: var(--accent); color: #fff; }
 .task-drop:hover { background: var(--line); }
-.task-done .task-title { text-decoration: line-through; color: var(--ink-3); }
 .task-done, .task-dropped { opacity: 0.6; }
-.task-dropped .task-title { text-decoration: line-through; color: var(--ink-3); text-decoration-color: var(--ink-3); }
+.task-done .task-title-text, .task-dropped .task-title-text {
+  color: var(--ink-3);
+  background-size: 100% 1.5px;
+}
+
+/* press feedback across controls */
+.add-btn, .nowbar-btn, .rail-toggle, .chip, .pill-btn, .sheet-done, .toast-undo {
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s ease;
+}
+.add-btn:active, .nowbar-btn:active, .rail-toggle:active { transform: scale(0.88); }
+.chip:active, .pill-btn:active, .toast-undo:active { transform: scale(0.95); }
+.sheet-done:active { transform: scale(0.98); }
+
+/* accessibility floor: minimal motion for users who ask for it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* === composer === */
 .today-head-row { display: flex; align-items: center; justify-content: space-between; }
@@ -236,8 +273,10 @@ input { font: inherit; color: inherit; }
 .seg {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   color: #fff; font-size: 10px; overflow: hidden; flex-basis: 0;
-  transition: flex-grow 0.18s cubic-bezier(0.3, 1.2, 0.4, 1);
+  transition: flex-grow 0.25s var(--ease-out-quart);
 }
+/* while dragging, segments track the pointer with zero lag */
+.split-bar.dragging .seg { transition: none; }
 .seg:first-child { border-radius: var(--radius-s) 0 0 var(--radius-s); }
 .seg:last-child { border-radius: 0 var(--radius-s) var(--radius-s) 0; }
 .seg-min { font-weight: 700; font-size: 12px; }

@@ -20,6 +20,8 @@
   --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.1);
   --shadow-3: 0 8px 30px rgba(0, 0, 0, 0.14);
   --font: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
 }
 @media (prefers-color-scheme: dark) {

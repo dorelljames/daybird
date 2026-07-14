@@ -1,3 +1,4 @@
+import { MotionConfig } from "motion/react";
 import { useNow } from "./hooks/useNow";
 import TodayView from "./components/TodayView";
 import TimeRail from "./components/TimeRail";
@@ -11,6 +12,7 @@ export default function App() {
   const now = useNow(1000);
   const s = useDaybird();
   return (
+    <MotionConfig reducedMotion="user">
     <div className="shell">
       <div className="titlebar" data-tauri-drag-region>
         <button
@@ -32,5 +34,6 @@ export default function App() {
       <ActiveTaskBar now={now} />
       <Toast />
     </div>
+    </MotionConfig>
   );
 }

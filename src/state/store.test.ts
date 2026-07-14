@@ -110,6 +110,12 @@ describe("delete, undo, reorder, priority", () => {
     store.getState().reorderToday(["t-vwra", "t-meditate", "t-journal"]);
     expect(todayTasks(store.getState(), NOW).map((t) => t.id)).toEqual(["t-vwra", "t-meditate", "t-journal"]);
   });
+  test("renameTask updates the title, ignores empty input", () => {
+    store.getState().renameTask("t-journal", "Evening journal");
+    expect(store.getState().tasks.find((t) => t.id === "t-journal")!.title).toBe("Evening journal");
+    store.getState().renameTask("t-journal", "   ");
+    expect(store.getState().tasks.find((t) => t.id === "t-journal")!.title).toBe("Evening journal");
+  });
   test("cyclePriority walks normal → high → later → normal", () => {
     store.getState().cyclePriority("t-meditate");
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("high");

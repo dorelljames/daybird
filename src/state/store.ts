@@ -33,6 +33,7 @@ export interface DaybirdState {
   dismissToast(): void;
   reorderToday(orderedIds: string[]): void;
   cyclePriority(id: string): void;
+  renameTask(id: string, title: string): void;
   addTask(title: string, estimateMin?: number, now?: number): void;
   addToToday(id: string, now?: number): void;
   addAllOverdueToToday(now?: number): void;
@@ -121,6 +122,13 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
     set((s) => {
       const pos = new Map(orderedIds.map((id, i) => [id, i + 1]));
       return { tasks: s.tasks.map((t) => (pos.has(t.id) ? { ...t, sortOrder: pos.get(t.id)! } : t)) };
+    }),
+
+  renameTask: (id, title) =>
+    set((s) => {
+      const t = title.trim();
+      if (!t) return {};
+      return { tasks: s.tasks.map((x) => (x.id === id ? { ...x, title: t } : x)) };
     }),
 
   cyclePriority: (id) =>
