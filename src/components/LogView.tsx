@@ -102,7 +102,14 @@ export default function LogView({ now }: { now: number }) {
     <div className="content">
       <header className="today-head">
         <h1>Log</h1>
-        <div className="today-sub">What actually happened, day by day</div>
+        <div className="today-sub">
+          What actually happened, day by day
+          <span className="log-legend">
+            <span className="log-key log-key-work" />Focus
+            <span className="log-key log-key-break" />Break
+            <span className="log-key log-key-skip" />Skipped
+          </span>
+        </div>
       </header>
       {logs.map((d) => (
         <DayCard key={d.day} d={d} now={now} tasks={s.tasks} />

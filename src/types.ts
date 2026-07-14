@@ -21,6 +21,24 @@ export interface Task {
   sortOrder: number;
 }
 
+export type TaskEventType =
+  | "created"
+  | "completed"
+  | "restored"
+  | "dropped"
+  | "renamed"
+  | "priority"
+  | "rescheduled"
+  | "deleted";
+
+export interface TaskEvent {
+  id: string;
+  taskId: string;
+  type: TaskEventType;
+  at: number; // epoch ms
+  meta?: string; // e.g. new title, new tier, new date
+}
+
 export interface TimeEntry {
   id: string;
   taskId: string | null; // null = break/untracked

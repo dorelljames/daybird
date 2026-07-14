@@ -200,6 +200,11 @@ input { font: inherit; color: inherit; }
 .log-break { background: var(--green); opacity: 0.6; }
 .log-discarded { background: var(--ink-3); opacity: 0.35; }
 .log-strip-times { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 9.5px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.log-legend { margin-left: var(--sp-3); display: inline-flex; align-items: center; gap: 5px; color: var(--ink-3); font-size: 11px; }
+.log-key { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+.log-key-work { background: var(--accent); opacity: 0.65; }
+.log-key-break { background: var(--green); opacity: 0.6; }
+.log-key-skip { background: var(--ink-3); opacity: 0.35; }
 .log-tasks { margin-top: var(--sp-2); display: flex; flex-direction: column; gap: 3px; }
 .log-task { display: flex; align-items: center; gap: var(--sp-2); font-size: 13px; }
 .log-glyph { width: 16px; text-align: center; color: var(--ink-3); font-size: 11px; flex-shrink: 0; }

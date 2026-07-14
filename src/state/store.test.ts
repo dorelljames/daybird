@@ -156,6 +156,29 @@ describe("delete, undo, reorder, priority", () => {
   });
 });
 
+describe("task events (audit trail)", () => {
+  test("lifecycle actions append events with timestamps", () => {
+    store.getState().addTask("Trace me", 10, NOW);
+    const id = store.getState().tasks.at(-1)!.id;
+    store.getState().setPriority(id, "high");
+    store.getState().renameTask(id, "Trace me properly");
+    store.getState().toggleDone(id, NOW + 5 * MIN);
+    store.getState().toggleDone(id, NOW + 6 * MIN); // restore
+    store.getState().dropTask(id, NOW + 7 * MIN);
+    const types = store.getState().events.filter((e) => e.taskId === id).map((e) => e.type);
+    expect(types).toEqual(["created", "priority", "renamed", "completed", "restored", "dropped"]);
+    const created = store.getState().events.find((e) => e.taskId === id && e.type === "created")!;
+    expect(created.at).toBe(NOW);
+  });
+  test("deleteTask records the event and undo restores the trail", () => {
+    const before = store.getState().events.length;
+    store.getState().deleteTask("t-journal");
+    expect(store.getState().events.at(-1)).toMatchObject({ type: "deleted", taskId: "t-journal" });
+    store.getState().undoToast();
+    expect(store.getState().events.length).toBe(before);
+  });
+});
+
 describe("dayLogs", () => {
   test("groups a day's entries, finished tasks, and totals", () => {
     store.getState().toggleDone("t-journal", NOW);
