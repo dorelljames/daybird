@@ -13,12 +13,25 @@ import PlaceholderView from "./components/PlaceholderView";
 import ShortcutsSheet from "./components/ShortcutsSheet";
 import { useDaybird, View } from "./state/store";
 import { openEntry, todayTasks, workedMinToday } from "./state/selectors";
-import { MIN } from "./lib/time";
+import { dayKey, MIN } from "./lib/time";
 import { setSoundEnabled, sfx } from "./lib/sound";
 import { playCompletionSound } from "./lib/celebrate";
 import { matchHotkey } from "./lib/hotkeys";
 
 const VIEW_ORDER: View[] = ["today", "upcoming", "projects", "log"];
+
+// Manual "log time away": span defaults to the gap since the last tracked
+// moment today (that's when you actually left), clamped to sane bounds; the
+// sheet's minutes stay editable either way. Real idle detection is Phase 2.
+function openAwaySheet() {
+  const st = useDaybird.getState();
+  const now = Date.now();
+  const today = dayKey(now);
+  const lastEnd = Math.max(0, ...st.entries.filter((e) => e.end !== null && dayKey(e.start) === today).map((e) => e.end!));
+  const gap = now - lastEnd;
+  const start = lastEnd > 0 && gap > 1 * MIN && gap < 12 * 60 * MIN ? lastEnd : now - 30 * MIN;
+  st.openIdleSheet({ start, end: now });
+}
 
 // Widget shows only when the app can't be seen: main window minimized or
 // unfocused. While you're in the app it stays out of the way entirely.
@@ -138,7 +151,7 @@ export default function App() {
         if (matchHotkey(e, `mod+${i + 1}`)) { e.preventDefault(); return st.setView(VIEW_ORDER[i]); }
       }
       if (matchHotkey(e, "mod+n")) { e.preventDefault(); st.setView("today"); return st.setComposer(true); }
-      if (matchHotkey(e, "mod+shift+i")) { e.preventDefault(); return st.openIdleSheet({ start: Date.now() - 23 * MIN, end: Date.now() }); }
+      if (matchHotkey(e, "mod+shift+i")) { e.preventDefault(); return openAwaySheet(); }
       if (matchHotkey(e, "mod+\\")) { e.preventDefault(); return st.toggleRail(); }
 
       const target = e.target as HTMLElement;
@@ -174,11 +187,7 @@ export default function App() {
     <MotionConfig reducedMotion="user">
     <div className="shell">
       <div className="titlebar" data-tauri-drag-region>
-        <button
-          className="rail-toggle"
-          title="Simulate 23m idle (⇧⌘I)"
-          onClick={() => s.openIdleSheet({ start: Date.now() - 23 * MIN, end: Date.now() })}
-        >
+        <button className="rail-toggle" title="Log time away (⇧⌘I)" onClick={() => openAwaySheet()}>
           💤
         </button>
         <button

@@ -16,15 +16,21 @@ export default function IdleSheet() {
   const barRef = useRef<HTMLDivElement>(null);
   const [bounds, setBounds] = useState<[number, number]>([0.4, 0.8]);
   const [dragging, setDragging] = useState(false);
+  const [editedMin, setEditedMin] = useState<string | null>(null);
   const activeTask = s.tasks.find((t) => t.id === s.activeTaskId);
 
   // re-initialize the split each time the sheet opens; no task segment when idle hit with no timer
   useEffect(() => {
-    if (s.idleSpan) setBounds(s.activeTaskId ? [0.4, 0.8] : [0, 0.8]);
+    if (s.idleSpan) {
+      setBounds(s.activeTaskId ? [0.4, 0.8] : [0, 0.8]);
+      setEditedMin(null);
+    }
   }, [s.idleSpan, s.activeTaskId]);
 
   if (!s.idleSpan) return null;
-  const total = minutesBetween(s.idleSpan.start, s.idleSpan.end);
+  const spanMin = minutesBetween(s.idleSpan.start, s.idleSpan.end);
+  const parsed = editedMin === null ? NaN : parseInt(editedMin, 10);
+  const total = !Number.isNaN(parsed) && parsed > 0 ? Math.min(parsed, 24 * 60) : spanMin;
   const fractions = fractionsFromBoundaries(bounds[0], bounds[1]);
   const mins = allocate(total, fractions);
   const labels = [activeTask ? activeTask.title : "Task", "Break", "Skip"];
@@ -70,7 +76,18 @@ export default function IdleSheet() {
           transition={{ type: "spring", stiffness: 380, damping: 30 }}
         >
           <div className="sheet-title">Welcome back 👋</div>
-          <div className="sheet-sub">You were away for {total} minutes</div>
+          <div className="sheet-sub">
+            You were away for
+            <input
+              className="sheet-min-edit"
+              inputMode="numeric"
+              value={editedMin ?? String(spanMin)}
+              onFocus={(e) => e.currentTarget.select()}
+              onChange={(e) => setEditedMin(e.target.value.replace(/\D/g, ""))}
+              title="Adjust to the real minutes you were away"
+            />
+            minutes
+          </div>
 
           <div className={`split-bar ${dragging ? "dragging" : ""}`} ref={barRef}>
             {SEGMENTS.map((seg, i) => (
@@ -96,6 +113,11 @@ export default function IdleSheet() {
           <button
             className="sheet-done"
             onClick={() => {
+              // if the minutes were corrected, the away period still ends "now" —
+              // shift the span's start back to cover the edited duration
+              if (total !== spanMin && s.idleSpan) {
+                s.openIdleSheet({ start: s.idleSpan.end - total * 60_000, end: s.idleSpan.end });
+              }
               const taskMin = activeTask ? mins[0] : 0;
               const breakMin = activeTask ? mins[1] : mins[0] + mins[1];
               playResolveSound(taskMin, breakMin, mins[2]);
