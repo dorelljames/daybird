@@ -100,3 +100,20 @@ input { font: inherit; color: inherit; }
 .overdue-row .task { flex: 1; opacity: 0.75; }
 .overdue-pull { flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
 .overdue-row:hover .overdue-pull { opacity: 1; }
+
+/* === time rail === */
+.titlebar { display: flex; align-items: center; justify-content: flex-end; padding: 0 var(--sp-3); }
+.rail-toggle { color: var(--ink-3); font-size: 14px; width: 26px; height: 26px; border-radius: 6px; }
+.rail-toggle:hover { background: var(--line); color: var(--ink-2); }
+.rail { overflow: hidden; border-left: 1px solid var(--line); background: var(--surface-2); }
+.rail-inner { position: relative; width: 96px; height: 100%; padding: var(--sp-2); }
+.rail-hour { position: absolute; left: 8px; color: var(--ink-3); font-size: 9px; border-top: 1px solid var(--line); width: 80px; padding-top: 1px; }
+.rail-block { position: absolute; left: 30px; width: 52px; border-radius: 4px; }
+.rail-work { background: var(--accent); opacity: 0.5; }
+.rail-break { background: var(--green); opacity: 0.5; }
+.rail-discarded { background: var(--ink-3); opacity: 0.3; }
+.rail-gap {
+  background: repeating-linear-gradient(45deg, var(--line), var(--line) 3px, transparent 3px, transparent 6px);
+  border: 1px dashed var(--ink-3); opacity: 0.7;
+}
+.rail-now { position: absolute; left: 26px; width: 60px; height: 2px; background: var(--red); border-radius: 1px; }
