@@ -22,15 +22,21 @@ const VIEW_ORDER: View[] = ["today", "upcoming", "projects", "log"];
 
 // Widget is visible while a timer runs, or while the main window is minimized
 // (where its idle pill answers "am I tracking anything right now?").
+// Dedupe show/hide: calling show() on macOS re-orders and re-focuses the
+// window, and doing that every tick steals focus from whatever the user is in.
+let widgetShown: boolean | null = null;
 async function syncWidgetVisibility() {
   try {
     const minimized = await getCurrentWindow().isMinimized();
+    const shouldShow = useDaybird.getState().activeTaskId !== null || minimized;
+    if (shouldShow === widgetShown) return;
     const w = await WebviewWindow.getByLabel("widget");
     if (!w) return;
-    if (useDaybird.getState().activeTaskId || minimized) await w.show();
+    if (shouldShow) await w.show();
     else await w.hide();
+    widgetShown = shouldShow;
   } catch {
-    // window APIs unavailable outside Tauri
+    widgetShown = null; // window APIs unavailable outside Tauri
   }
 }
 
