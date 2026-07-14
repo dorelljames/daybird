@@ -6,9 +6,8 @@ import { useNow } from "./hooks/useNow";
 import TodayView from "./components/TodayView";
 import TimeRail from "./components/TimeRail";
 import IdleSheet from "./components/IdleSheet";
-import ActiveTaskBar from "./components/ActiveTaskBar";
 import Toast from "./components/Toast";
-import Switcher from "./components/Switcher";
+import Dock from "./components/Dock";
 import PlaceholderView from "./components/PlaceholderView";
 import { useDaybird, View } from "./state/store";
 import { openEntry, todayTasks, workedMinToday } from "./state/selectors";
@@ -165,9 +164,8 @@ export default function App() {
         </main>
         <TimeRail now={now} />
       </div>
-      <Switcher />
+      <Dock now={now} />
       <IdleSheet />
-      <ActiveTaskBar now={now} />
       <Toast />
     </div>
     </MotionConfig>
