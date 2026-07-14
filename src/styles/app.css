@@ -130,10 +130,13 @@ input { font: inherit; color: inherit; }
 
 /* === widget window === */
 .widget-mode, .widget-mode body { background: transparent !important; overflow: hidden; }
-.widget-root { height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; }
+.widget-root { height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; }
 .widget {
   background: var(--surface);
-  box-shadow: var(--shadow-3);
+  /* quiet, tight shadow: --shadow-3's 30px blur reads as a smudge over other
+     apps and clips into a rectangle at the window edge */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 3px 10px rgba(0, 0, 0, 0.16);
+  border: 0.5px solid color-mix(in srgb, var(--line) 70%, transparent);
   display: flex; align-items: center; gap: var(--sp-2);
   max-width: calc(100vw - 24px);
   min-width: 0;
