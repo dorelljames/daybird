@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, MotionConfig, Transition } from "motion/react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { fmtClock } from "../lib/time";
+import { useNow } from "../hooks/useNow";
 
 // Long titles glide to reveal their end (pause → drift → pause → back);
 // short titles stay put. Fade masks replace hard clipping while moving.
@@ -66,16 +67,35 @@ interface WidgetState {
 const morph = { type: "spring", stiffness: 480, damping: 36 } as const;
 
 export default function WidgetApp() {
-  const [st, setSt] = useState<WidgetState | null>(null);
+  const [snap, setSnap] = useState<{ st: WidgetState; at: number } | null>(null);
   const [hover, setHover] = useState(false);
+  const now = useNow(1000);
 
   useEffect(() => {
-    const un = listen<WidgetState>("daybird://state", (e) => setSt(e.payload));
+    const un = listen<WidgetState>("daybird://state", (e) => setSnap({ st: e.payload, at: Date.now() }));
     return () => { un.then((f) => f()); };
   }, []);
 
-  if (!st || !st.running) return null;
-  const clock = fmtClock(st.elapsedSec);
+  if (!snap) return null;
+  const st = snap.st;
+
+  // ambient idle state: shown while the main window is minimized with no timer
+  if (!st.running) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <div className="widget-root" data-tauri-drag-region>
+          <button className="widget widget-pill widget-idle" title="Open Daybird" onClick={() => emit("daybird://cmd", { cmd: "open" })}>
+            <span className="w-ind w-ind-dot w-dot-idle" />
+            <span className="w-title w-title-idle">Not tracking</span>
+          </button>
+        </div>
+      </MotionConfig>
+    );
+  }
+
+  // self-ticking clock: the minimized main window's timers throttle, so the
+  // widget extrapolates elapsed time from the last snapshot itself
+  const clock = fmtClock(st.elapsedSec + Math.max(0, Math.round((now - snap.at) / 1000)));
   const pct = st.estimateMin ? Math.min(1, st.workedMin / st.estimateMin) : 0;
 
   return (

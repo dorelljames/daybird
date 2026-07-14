@@ -144,6 +144,10 @@ input { font: inherit; color: inherit; }
 .w-head { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
 .w-ind { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .w-ind-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+.widget-idle { cursor: pointer; }
+.widget-idle:hover .w-title-idle { color: var(--ink); }
+.w-dot-idle { background: var(--ink-3); animation: pulse 3s infinite; }
+.w-title-idle { color: var(--ink-2); font-weight: 500; }
 .w-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 .w-title {
   min-width: 0;

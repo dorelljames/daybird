@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useNow } from "./hooks/useNow";
 import TodayView from "./components/TodayView";
 import TimeRail from "./components/TimeRail";
@@ -17,6 +18,20 @@ import { playCompletionSound } from "./lib/celebrate";
 import { matchHotkey } from "./lib/hotkeys";
 
 const VIEW_ORDER: View[] = ["today", "upcoming", "projects", "log"];
+
+// Widget is visible while a timer runs, or while the main window is minimized
+// (where its idle pill answers "am I tracking anything right now?").
+async function syncWidgetVisibility() {
+  try {
+    const minimized = await getCurrentWindow().isMinimized();
+    const w = await WebviewWindow.getByLabel("widget");
+    if (!w) return;
+    if (useDaybird.getState().activeTaskId || minimized) await w.show();
+    else await w.hide();
+  } catch {
+    // window APIs unavailable outside Tauri
+  }
+}
 
 export default function App() {
   const now = useNow(1000);
@@ -51,19 +66,26 @@ export default function App() {
         playCompletionSound(st, st.activeTaskId, Date.now());
         st.toggleDone(st.activeTaskId);
       }
+      if (e.payload.cmd === "open") {
+        const main = getCurrentWindow();
+        void main.unminimize().then(() => main.setFocus());
+      }
     });
     return () => { un.then((f) => f()); };
   }, []);
 
-  // widget window follows the timer
+  // widget visibility: every tick as backstop, focus changes for instant response
   useEffect(() => {
-    void (async () => {
-      const w = await WebviewWindow.getByLabel("widget");
-      if (!w) return;
-      if (s.activeTaskId) await w.show();
-      else await w.hide();
-    })();
-  }, [s.activeTaskId]);
+    void syncWidgetVisibility();
+  }, [now, s.activeTaskId]);
+
+  useEffect(() => {
+    let un: (() => void) | undefined;
+    void getCurrentWindow()
+      .onFocusChanged(() => void syncWidgetVisibility())
+      .then((f) => { un = f; });
+    return () => un?.();
+  }, []);
 
   // near-inaudible key tick on any button press
   useEffect(() => {

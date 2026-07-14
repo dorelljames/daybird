@@ -8,6 +8,9 @@
     "core:window:allow-show",
     "core:window:allow-hide",
     "core:window:allow-start-dragging",
+    "core:window:allow-is-minimized",
+    "core:window:allow-unminimize",
+    "core:window:allow-set-focus",
     "core:event:default",
     "opener:default"
   ]
