@@ -23,13 +23,14 @@ interface Blip {
   vol?: number;
   sweep?: number; // Hz delta over the duration
   delay?: number;
+  jitter?: boolean; // pitch drift; off when a caller pre-drifts a chord
 }
 
-function blip({ freq, type = "sine", dur = 0.08, vol = 0.1, sweep = 0, delay = 0 }: Blip) {
+function blip({ freq, type = "sine", dur = 0.08, vol = 0.1, sweep = 0, delay = 0, jitter = true }: Blip) {
   if (!enabled) return;
   const c = ac();
   const t0 = c.currentTime + delay;
-  const f = drift(freq);
+  const f = jitter ? drift(freq) : freq;
   const osc = c.createOscillator();
   const gain = c.createGain();
   osc.type = type;
@@ -63,16 +64,35 @@ function tap(vol = 0.05, cutoff = 2000, dur = 0.03, delay = 0) {
   src.start(t0);
 }
 
+// Marimba-ish note: drifted fundamental + soft octave partial (drifted together).
+function note(freq: number, { delay = 0, dur = 0.18, vol = 0.1 } = {}) {
+  const f = drift(freq);
+  blip({ freq: f, dur, vol, delay, jitter: false });
+  blip({ freq: f * 2, dur: dur * 0.5, vol: vol * 0.22, delay, jitter: false });
+}
+
+// C major, C5..C6 — each completion today climbs one step.
+const SCALE = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
+
 export const sfx = {
-  /** Hero: task completed — soft pop + warm settling tone. */
-  complete() {
-    tap(0.06, 3000);
-    blip({ freq: 660, dur: 0.14, vol: 0.12, sweep: -80 });
-    blip({ freq: 990, dur: 0.08, vol: 0.04, delay: 0.02 });
+  /** Hero: task completed — soft pop + rising fifth, one scale step higher per win today. */
+  complete(step = 0) {
+    const root = SCALE[Math.max(0, step) % SCALE.length];
+    tap(0.05, 3500);
+    note(root, { vol: 0.1, dur: 0.16 });
+    note(root * 1.5, { delay: 0.09, vol: 0.11, dur: 0.22 });
   },
-  /** Timer starts — gentle tick up. */
+  /** Last todo of the day done — gentle C–E–G–C arpeggio. The all-clear. */
+  allDone() {
+    tap(0.05, 3500);
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+      note(f, { delay: i * 0.09, vol: 0.09 + i * 0.006, dur: 0.26 })
+    );
+  },
+  /** Timer starts — warm rising fourth: an invitation, not an alarm. */
   start() {
-    blip({ freq: 440, sweep: 120, dur: 0.07, vol: 0.09 });
+    note(392, { vol: 0.07, dur: 0.12 });
+    note(523.25, { delay: 0.06, vol: 0.09, dur: 0.16 });
   },
   /** Timer pauses — tick down. */
   stop() {

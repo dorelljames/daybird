@@ -3,6 +3,7 @@ import { useDaybird } from "../state/store";
 import { openEntry } from "../state/selectors";
 import { fmtClock } from "../lib/time";
 import { sfx } from "../lib/sound";
+import { playCompletionSound } from "../lib/celebrate";
 
 export default function ActiveTaskBar({ now }: { now: number }) {
   const s = useDaybird();
@@ -44,7 +45,7 @@ export default function ActiveTaskBar({ now }: { now: number }) {
             <button
               className="nowbar-btn nowbar-done"
               aria-label="done"
-              onClick={() => { sfx.complete(); s.toggleDone(task.id); }}
+              onClick={() => { playCompletionSound(s, task.id, now); s.toggleDone(task.id); }}
             >
               ✓
             </button>

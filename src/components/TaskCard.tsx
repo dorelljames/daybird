@@ -6,6 +6,7 @@ import { workedMinToday } from "../state/selectors";
 import { fmtClock, fmtMin } from "../lib/time";
 import { useAltKey } from "../hooks/useAltKey";
 import { sfx } from "../lib/sound";
+import { playCompletionSound } from "../lib/celebrate";
 
 interface Props {
   task: Task;
@@ -63,7 +64,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
         transition={{ type: "spring", stiffness: 500, damping: 22 }}
         onClick={(e) => {
           e.stopPropagation();
-          if (task.status !== "done") sfx.complete();
+          if (task.status !== "done") playCompletionSound(s, task.id, now);
           s.toggleDone(task.id);
         }}
       >
