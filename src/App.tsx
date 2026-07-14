@@ -2,6 +2,7 @@ import { useNow } from "./hooks/useNow";
 import TodayView from "./components/TodayView";
 import TimeRail from "./components/TimeRail";
 import IdleSheet from "./components/IdleSheet";
+import Toast from "./components/Toast";
 import { useDaybird } from "./state/store";
 import { MIN } from "./lib/time";
 
@@ -27,6 +28,7 @@ export default function App() {
         <TimeRail now={now} />
       </div>
       <IdleSheet />
+      <Toast />
     </div>
   );
 }

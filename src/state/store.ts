@@ -5,6 +5,12 @@ import { dayKey, MIN } from "../lib/time";
 
 export type View = "today" | "upcoming" | "projects" | "log";
 export interface IdleSpan { start: number; end: number; }
+export interface Toast { message: string; }
+interface UndoSnapshot {
+  tasks: Task[];
+  entries: TimeEntry[];
+  activeTaskId: string | null;
+}
 
 export interface DaybirdState {
   projects: Project[];
@@ -16,8 +22,15 @@ export interface DaybirdState {
   idleSpan: IdleSpan | null;
   railOpen: boolean;
   composerOpen: boolean;
+  toast: Toast | null;
+  undoSnapshot: UndoSnapshot | null;
   toggleDone(id: string, now?: number): void;
   dropTask(id: string, now?: number): void;
+  deleteTask(id: string): void;
+  undoToast(): void;
+  dismissToast(): void;
+  reorderToday(orderedIds: string[]): void;
+  cyclePriority(id: string): void;
   addTask(title: string, estimateMin?: number, now?: number): void;
   addToToday(id: string, now?: number): void;
   addAllOverdueToToday(now?: number): void;
@@ -35,6 +48,10 @@ function closeOpenEntry(entries: TimeEntry[], at: number): TimeEntry[] {
   return entries.map((e) => (e.end === null ? { ...e, end: Math.max(e.start, at) } : e));
 }
 
+function snapshot(s: DaybirdState): UndoSnapshot {
+  return { tasks: s.tasks, entries: s.entries, activeTaskId: s.activeTaskId };
+}
+
 export const storeCreator: StateCreator<DaybirdState> = (set) => ({
   projects: seedProjects,
   tasks: seedTasks,
@@ -45,6 +62,8 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
   idleSpan: null,
   railOpen: true,
   composerOpen: false,
+  toast: null,
+  undoSnapshot: null,
 
   toggleDone: (id, now = Date.now()) =>
     set((s) => {
@@ -64,16 +83,51 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
     }),
 
   dropTask: (id, now = Date.now()) =>
+    set((s) => {
+      const target = s.tasks.find((t) => t.id === id);
+      if (!target) return {};
+      const restoring = target.status === "dropped";
+      return {
+        tasks: s.tasks.map((t) =>
+          t.id !== id
+            ? t
+            : restoring
+              ? { ...t, status: "todo", completedAt: undefined }
+              : { ...t, status: "dropped", completedAt: now }
+        ),
+        entries: s.activeTaskId === id ? closeOpenEntry(s.entries, now) : s.entries,
+        activeTaskId: s.activeTaskId === id ? null : s.activeTaskId,
+        ...(restoring ? {} : { undoSnapshot: snapshot(s), toast: { message: "Task discarded" } }),
+      };
+    }),
+
+  deleteTask: (id) =>
+    set((s) => ({
+      undoSnapshot: snapshot(s),
+      toast: { message: "Task deleted" },
+      tasks: s.tasks.filter((t) => t.id !== id),
+      entries: s.entries.filter((e) => e.taskId !== id),
+      activeTaskId: s.activeTaskId === id ? null : s.activeTaskId,
+    })),
+
+  undoToast: () =>
+    set((s) => (s.undoSnapshot ? { ...s.undoSnapshot, undoSnapshot: null, toast: null } : { toast: null })),
+
+  dismissToast: () => set({ toast: null, undoSnapshot: null }),
+
+  reorderToday: (orderedIds) =>
+    set((s) => {
+      const pos = new Map(orderedIds.map((id, i) => [id, i + 1]));
+      return { tasks: s.tasks.map((t) => (pos.has(t.id) ? { ...t, sortOrder: pos.get(t.id)! } : t)) };
+    }),
+
+  cyclePriority: (id) =>
     set((s) => ({
       tasks: s.tasks.map((t) =>
         t.id !== id
           ? t
-          : t.status === "dropped"
-            ? { ...t, status: "todo", completedAt: undefined }
-            : { ...t, status: "dropped", completedAt: now }
+          : { ...t, priority: t.priority === "high" ? "later" : t.priority === "later" ? undefined : "high" }
       ),
-      entries: s.activeTaskId === id ? closeOpenEntry(s.entries, now) : s.entries,
-      activeTaskId: s.activeTaskId === id ? null : s.activeTaskId,
     })),
 
   addTask: (title, estimateMin, now = Date.now()) =>

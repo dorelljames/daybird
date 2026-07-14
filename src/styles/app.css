@@ -62,7 +62,17 @@ input { font: inherit; color: inherit; }
   font-size: 10px; color: var(--ink-2);
   opacity: 0; transition: opacity 0.15s, background 0.15s;
 }
-.task:hover .task-play, .task:hover .task-drop { opacity: 1; }
+.task:hover .task-play, .task:hover .task-drop, .task:hover .task-flag { opacity: 1; }
+.task-flag {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--ink-3);
+  opacity: 0; transition: opacity 0.15s, color 0.15s;
+}
+.task-flag:hover { background: var(--priority-soft); color: var(--priority); }
+.task-flag.is-high { opacity: 1; color: var(--priority); }
+.task-flag.is-later { opacity: 1; color: var(--ink-3); transform: rotate(90deg); }
+.task-delete:hover { background: rgba(255, 59, 48, 0.15); }
 .task-play.is-active { background: var(--accent); color: #fff; }
 .task-play:hover { background: var(--accent-soft); color: var(--accent); }
 .task-play.is-active:hover { background: var(--accent); color: #fff; }
@@ -89,6 +99,39 @@ input { font: inherit; color: inherit; }
   box-shadow: var(--shadow-2);
   font-size: 14px;
 }
+
+/* === priority tiers === */
+.tier { margin-bottom: var(--sp-4); }
+.tier-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--ink-2); margin-bottom: var(--sp-2);
+}
+.tier-priority .tier-label { color: var(--priority); font-weight: 700; }
+.tier-priority .task { border-left: 3px solid var(--priority); }
+.tier-priority .task-active { border-color: var(--accent); border-left-color: var(--priority); }
+.tier-later .task { opacity: 0.8; }
+.tier-later .tier-label { color: var(--ink-3); }
+.task-list > * { position: relative; }
+
+/* === toast === */
+.toast-wrap {
+  position: fixed; bottom: 24px; left: 0; right: 0;
+  display: flex; justify-content: center;
+  z-index: 50; pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--ink); color: var(--bg);
+  border-radius: 22px; padding: 9px 10px 9px 16px;
+  display: flex; align-items: center; gap: var(--sp-3);
+  box-shadow: var(--shadow-3); font-size: 12.5px;
+}
+.toast-undo {
+  background: rgba(128, 128, 128, 0.25);
+  border-radius: 14px; padding: 3px 12px;
+  font-size: 12px; font-weight: 600; color: var(--bg);
+}
+.toast-undo:hover { background: rgba(128, 128, 128, 0.4); }
 
 /* === overdue === */
 .overdue { margin-top: var(--sp-6); }

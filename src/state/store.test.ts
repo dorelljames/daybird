@@ -83,6 +83,43 @@ describe("idle allocation", () => {
   });
 });
 
+describe("delete, undo, reorder, priority", () => {
+  test("deleteTask removes the task and its entries, with undo toast", () => {
+    store.getState().deleteTask("t-journal");
+    const s = store.getState();
+    expect(s.tasks.some((t) => t.id === "t-journal")).toBe(false);
+    expect(s.entries.some((e) => e.taskId === "t-journal")).toBe(false);
+    expect(s.toast?.message).toMatch(/deleted/i);
+  });
+  test("undoToast restores the pre-action state", () => {
+    const tasksBefore = store.getState().tasks.length;
+    store.getState().deleteTask("t-journal");
+    store.getState().undoToast();
+    const s = store.getState();
+    expect(s.tasks.length).toBe(tasksBefore);
+    expect(s.entries.some((e) => e.taskId === "t-journal")).toBe(true);
+    expect(s.toast).toBeNull();
+  });
+  test("dropTask offers undo via toast", () => {
+    store.getState().dropTask("t-vwra", NOW);
+    expect(store.getState().toast?.message).toMatch(/discarded/i);
+    store.getState().undoToast();
+    expect(store.getState().tasks.find((t) => t.id === "t-vwra")!.status).toBe("todo");
+  });
+  test("reorderToday reassigns sort order", () => {
+    store.getState().reorderToday(["t-vwra", "t-meditate", "t-journal"]);
+    expect(todayTasks(store.getState(), NOW).map((t) => t.id)).toEqual(["t-vwra", "t-meditate", "t-journal"]);
+  });
+  test("cyclePriority walks normal → high → later → normal", () => {
+    store.getState().cyclePriority("t-meditate");
+    expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("high");
+    store.getState().cyclePriority("t-meditate");
+    expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("later");
+    store.getState().cyclePriority("t-meditate");
+    expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBeUndefined();
+  });
+});
+
 describe("selectors", () => {
   test("workedMinToday sums closed and open entries", () => {
     expect(workedMinToday(store.getState(), "t-journal", NOW)).toBe(50);

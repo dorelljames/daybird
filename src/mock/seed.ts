@@ -13,7 +13,7 @@ export const seedProjects: Project[] = [
 export const seedTasks: Task[] = [
   { id: "t-meditate", projectId: "p-personal", title: "Daily meditation", estimateMin: 15, scheduledFor: today, status: "todo", sortOrder: 1 },
   { id: "t-journal", projectId: "p-personal", title: "Daily journal", estimateMin: 15, scheduledFor: today, status: "todo", sortOrder: 2 },
-  { id: "t-vwra", projectId: "p-personal", title: "Get a clear direction on consistent VWRA monthly savings", estimateMin: 55, scheduledFor: today, status: "todo", sortOrder: 3 },
+  { id: "t-vwra", projectId: "p-personal", title: "Get a clear direction on consistent VWRA monthly savings", estimateMin: 55, scheduledFor: today, status: "todo", priority: "high", sortOrder: 3 },
   { id: "t-inbox", projectId: "p-dorellworks", title: "Cleanup Linear to allow managing personal projects properly", estimateMin: 60, scheduledFor: yesterday, status: "todo", sortOrder: 4 },
   { id: "t-dev-4563", projectId: "p-linear", title: "[settings & nav] Top bar: add 1px bottom border", estimateMin: 60, scheduledFor: yesterday, status: "todo", linearId: "DEV-4563", sortOrder: 5 },
   { id: "t-dev-4535", projectId: "p-linear", title: "[sell] Polish Stripe Terminal flow copy", estimateMin: 60, scheduledFor: yesterday, status: "todo", linearId: "DEV-4535", sortOrder: 6 },

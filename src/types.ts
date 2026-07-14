@@ -1,5 +1,6 @@
 export type TaskStatus = "todo" | "done" | "dropped";
 export type EntryKind = "work" | "break" | "discarded";
+export type Priority = "high" | "later";
 
 export interface Project {
   id: string;
@@ -14,6 +15,7 @@ export interface Task {
   estimateMin?: number;
   scheduledFor?: string; // local YYYY-MM-DD
   status: TaskStatus;
+  priority?: Priority; // undefined = normal tier
   completedAt?: number;
   linearId?: string; // e.g. "DEV-4563"
   sortOrder: number;
