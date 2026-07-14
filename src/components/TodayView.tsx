@@ -4,6 +4,7 @@ import { estimateRemainingMin, todayTasks } from "../state/selectors";
 import { fmtMin } from "../lib/time";
 import TaskCard from "./TaskCard";
 import Composer from "./Composer";
+import OverdueSection from "./OverdueSection";
 
 export default function TodayView({ now }: { now: number }) {
   const s = useDaybird();
@@ -31,6 +32,7 @@ export default function TodayView({ now }: { now: number }) {
           ))}
         </AnimatePresence>
       </section>
+      <OverdueSection now={now} />
     </div>
   );
 }

@@ -87,3 +87,16 @@ input { font: inherit; color: inherit; }
   box-shadow: 0 0 0 2px var(--accent), var(--shadow-2);
   font-size: 14px;
 }
+
+/* === overdue === */
+.overdue { margin-top: var(--sp-6); }
+.overdue-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-2); }
+.overdue-label { color: var(--ink-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+.pill-btn {
+  background: var(--accent-soft); color: var(--accent);
+  border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600;
+}
+.overdue-row { display: flex; align-items: center; gap: var(--sp-2); }
+.overdue-row .task { flex: 1; opacity: 0.75; }
+.overdue-pull { flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.overdue-row:hover .overdue-pull { opacity: 1; }
