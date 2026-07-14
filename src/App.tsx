@@ -20,15 +20,16 @@ import { matchHotkey } from "./lib/hotkeys";
 
 const VIEW_ORDER: View[] = ["today", "upcoming", "projects", "log"];
 
-// Widget is visible while a timer runs, or while the main window is minimized
-// (where its idle pill answers "am I tracking anything right now?").
-// Dedupe show/hide: calling show() on macOS re-orders and re-focuses the
-// window, and doing that every tick steals focus from whatever the user is in.
+// Widget shows only when the app can't be seen: main window minimized or
+// unfocused. While you're in the app it stays out of the way entirely.
+// Dedupe show/hide: calling show() on macOS re-orders the window, and doing
+// that every tick disrupts whatever the user is in.
 let widgetShown: boolean | null = null;
 async function syncWidgetVisibility() {
   try {
-    const minimized = await getCurrentWindow().isMinimized();
-    const shouldShow = useDaybird.getState().activeTaskId !== null || minimized;
+    const main = getCurrentWindow();
+    const [minimized, focused] = await Promise.all([main.isMinimized(), main.isFocused()]);
+    const shouldShow = minimized || !focused;
     if (shouldShow === widgetShown) return;
     const w = await WebviewWindow.getByLabel("widget");
     if (!w) return;
@@ -53,6 +54,7 @@ export default function App() {
   useEffect(() => {
     const entry = openEntry(s);
     void emit("daybird://state", {
+      taskId: active?.id ?? null,
       title: active?.title ?? "",
       elapsedSec: entry ? Math.max(0, Math.floor((now - entry.start) / 1000)) : 0,
       estimateMin: active?.estimateMin ?? null,
@@ -62,25 +64,38 @@ export default function App() {
   }, [now, s.activeTaskId]);
 
   // widget commands come back as events; acting from the widget surfaces the
-  // app so the next decision (next task, allocate time) is one glance away
+  // app and reveals the task it was about
   useEffect(() => {
     const bringToFront = () => {
       const main = getCurrentWindow();
       void main.unminimize().then(() => main.setFocus());
     };
-    const un = listen<{ cmd: string }>("daybird://cmd", (e) => {
+    const reveal = (id: string | null) => {
+      bringToFront();
+      if (!id) return;
+      const st = useDaybird.getState();
+      st.setView("today");
+      st.setSelected(id);
+      setTimeout(() => {
+        document.querySelector(`[data-task-id="${id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+    };
+    const un = listen<{ cmd: string; taskId?: string | null }>("daybird://cmd", (e) => {
       const st = useDaybird.getState();
       if (e.payload.cmd === "pause") {
+        const id = st.activeTaskId;
         sfx.stop();
         st.stopTimer();
-        bringToFront();
+        reveal(id);
       }
       if (e.payload.cmd === "done" && st.activeTaskId) {
-        playCompletionSound(st, st.activeTaskId, Date.now());
-        st.toggleDone(st.activeTaskId);
-        bringToFront();
+        const id = st.activeTaskId;
+        playCompletionSound(st, id, Date.now());
+        st.toggleDone(id);
+        reveal(id);
       }
       if (e.payload.cmd === "open") bringToFront();
+      if (e.payload.cmd === "open-task") reveal(e.payload.taskId ?? null);
     });
     return () => { un.then((f) => f()); };
   }, []);

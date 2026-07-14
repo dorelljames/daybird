@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, MotionConfig, Transition } from "motion/react";
 import { emit, listen } from "@tauri-apps/api/event";
+import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window";
 import { fmtClock } from "../lib/time";
 import { useNow } from "../hooks/useNow";
 
 // Long titles glide to reveal their end (pause → drift → pause → back);
 // short titles stay put. Fade masks replace hard clipping while moving.
-function MarqueeTitle({ text }: { text: string }) {
+function MarqueeTitle({ text, onDoubleClick }: { text: string; onDoubleClick?: () => void }) {
   const outerRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const [dist, setDist] = useState(0);
@@ -39,6 +40,8 @@ function MarqueeTitle({ text }: { text: string }) {
     <motion.span
       layout="position"
       ref={outerRef}
+      onDoubleClick={onDoubleClick}
+      title={onDoubleClick ? "Double-click to open in Daybird" : undefined}
       className={`w-title w-marquee ${dist > 0 ? "is-overflow" : ""}`}
       animate={masks}
       // scope transitions: the layout morph must NOT inherit the infinite glide
@@ -57,6 +60,7 @@ function MarqueeTitle({ text }: { text: string }) {
 }
 
 interface WidgetState {
+  taskId: string | null;
   title: string;
   elapsedSec: number;
   estimateMin: number | null;
@@ -69,6 +73,7 @@ const morph = { type: "spring", stiffness: 480, damping: 36 } as const;
 export default function WidgetApp() {
   const [snap, setSnap] = useState<{ st: WidgetState; at: number } | null>(null);
   const [hover, setHover] = useState(false);
+  const [anchor, setAnchor] = useState<"down" | "up">("down");
   const now = useNow(1000);
 
   useEffect(() => {
@@ -76,14 +81,36 @@ export default function WidgetApp() {
     return () => { un.then((f) => f()); };
   }, []);
 
+  // if the widget sits in the lower part of the screen, the card must expand
+  // upward or its buttons fall outside the (invisible) window bounds
+  useEffect(() => {
+    const win = getCurrentWindow();
+    async function update() {
+      try {
+        const [pos, size, mon] = await Promise.all([win.outerPosition(), win.outerSize(), currentMonitor()]);
+        if (!mon) return;
+        const overflowsBelow = pos.y + size.height > mon.position.y + mon.size.height - 8;
+        setAnchor(overflowsBelow ? "up" : "down");
+      } catch {
+        // window APIs unavailable outside Tauri
+      }
+    }
+    void update();
+    let un: (() => void) | undefined;
+    void win.onMoved(() => void update()).then((f) => { un = f; });
+    return () => un?.();
+  }, []);
+
   if (!snap) return null;
   const st = snap.st;
 
   // ambient idle state: shown while the main window is minimized with no timer
+  const rootClass = `widget-root ${anchor === "up" ? "anchor-up" : ""}`;
+
   if (!st.running) {
     return (
       <MotionConfig reducedMotion="user">
-        <div className="widget-root" data-tauri-drag-region>
+        <div className={rootClass} data-tauri-drag-region>
           <button className="widget widget-pill widget-idle" title="Open Daybird" onClick={() => emit("daybird://cmd", { cmd: "open" })}>
             <span className="w-ind w-ind-dot w-dot-idle" />
             <span className="w-title w-title-idle">Not tracking</span>
@@ -100,7 +127,7 @@ export default function WidgetApp() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="widget-root" data-tauri-drag-region onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <div className={rootClass} data-tauri-drag-region onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
         <motion.div
           layout
           className={`widget ${hover ? "widget-card" : "widget-pill"}`}
@@ -110,7 +137,7 @@ export default function WidgetApp() {
           <motion.div layout className="w-head" transition={morph} data-tauri-drag-region>
             {hover ? (
               <motion.span key="ring" layoutId="w-ind" className="w-ind" transition={morph}>
-                <svg viewBox="0 0 36 36" width="32" height="32">
+                <svg viewBox="0 0 36 36" width="36" height="36">
                   <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--ink-3)" strokeOpacity="0.35" strokeWidth="3" />
                   <circle
                     cx="18" cy="18" r="15.5" fill="none" stroke="var(--accent)" strokeWidth="3"
@@ -123,7 +150,10 @@ export default function WidgetApp() {
               <motion.span key="dot" layoutId="w-ind" className="w-ind w-ind-dot" transition={morph} />
             )}
             <div className="w-col">
-              <MarqueeTitle text={st.title} />
+              <MarqueeTitle
+                text={st.title}
+                onDoubleClick={() => emit("daybird://cmd", { cmd: "open-task", taskId: st.taskId })}
+              />
               <AnimatePresence initial={false}>
                 {hover && (
                   <motion.div
