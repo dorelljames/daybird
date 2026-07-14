@@ -385,7 +385,8 @@ input { font: inherit; color: inherit; }
   user-select: text; -webkit-user-select: text;
 }
 .sheet-min-edit:focus { border-bottom-color: var(--accent); }
-.split-bar { position: relative; display: flex; height: 44px; border-radius: var(--radius-s); overflow: visible; margin-bottom: var(--sp-3); }
+.split-bar { position: relative; display: flex; height: 44px; overflow: visible; margin-bottom: var(--sp-3); }
+.split-track { display: flex; flex: 1; border-radius: var(--radius-s); overflow: hidden; }
 .seg {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   color: #fff; font-size: 10px; overflow: hidden; flex-basis: 0;
@@ -393,13 +394,33 @@ input { font: inherit; color: inherit; }
 }
 /* while dragging, segments track the pointer with zero lag */
 .split-bar.dragging .seg { transition: none; }
-.seg:first-child { border-radius: var(--radius-s) 0 0 var(--radius-s); }
-.seg:last-child { border-radius: 0 var(--radius-s) var(--radius-s) 0; }
+.seg { cursor: pointer; }
 .seg-min { font-weight: 700; font-size: 12px; }
 .seg-label { opacity: 0.85; max-width: 90%; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-.seg-task { background: var(--accent); }
-.seg-break { background: var(--green); }
-.seg-skip { background: var(--ink-3); }
+.seg-unassigned {
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 4px, transparent 4px, transparent 9px);
+}
+
+/* segment assignment picker */
+.seg-picker {
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  margin-bottom: var(--sp-3);
+  display: flex; flex-direction: column;
+  padding: 4px;
+}
+.seg-picker-list { max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; }
+.seg-picker-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg-picker-new {
+  margin: 4px; padding: 6px 8px;
+  background: var(--surface); border: 1.5px solid var(--accent); border-radius: 7px;
+  outline: none; font-size: 12.5px; color: var(--ink);
+  caret-color: var(--accent);
+  user-select: text; -webkit-user-select: text;
+}
+.sheet-done:disabled { opacity: 0.45; cursor: default; }
 .split-handle {
   position: absolute; top: -4px; bottom: -4px; width: 12px;
   transform: translateX(-6px);
