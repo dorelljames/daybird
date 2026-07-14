@@ -191,9 +191,28 @@ input { font: inherit; color: inherit; }
 .tier-later .tier-label { color: var(--ink-3); }
 .task-list > * { position: relative; }
 
+/* === view switcher === */
+.switcher {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 2px; z-index: 30;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 24px; padding: 4px;
+  box-shadow: var(--shadow-2);
+}
+.sw-item { position: relative; padding: 6px 14px; font-size: 12px; color: var(--ink-2); border-radius: 18px; }
+.sw-item.is-on { color: var(--ink); font-weight: 600; }
+.sw-pill { position: absolute; inset: 0; background: var(--bg); border-radius: 18px; }
+.sw-label { position: relative; z-index: 1; }
+
+/* === placeholders === */
+.placeholder-view h1 { font-size: 26px; letter-spacing: -0.4px; }
+.placeholder-view p { color: var(--ink-3); font-size: 13px; margin-top: var(--sp-2); max-width: 320px; }
+
 /* === active task bar === */
 .nowbar-wrap {
-  position: fixed; bottom: 20px; left: 0; right: 0;
+  position: fixed; bottom: 64px; left: 0; right: 0;
   display: flex; justify-content: center;
   z-index: 30; pointer-events: none;
 }
@@ -231,7 +250,7 @@ input { font: inherit; color: inherit; }
 
 /* === toast === */
 .toast-wrap {
-  position: fixed; bottom: 72px; left: 0; right: 0;
+  position: fixed; bottom: 116px; left: 0; right: 0;
   display: flex; justify-content: center;
   z-index: 50; pointer-events: none;
 }
