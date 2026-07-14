@@ -1,0 +1,24 @@
+/* === base === */
+* { box-sizing: border-box; margin: 0; }
+html, body, #root { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+input { font: inherit; color: inherit; }
+
+/* === shell === */
+.shell { height: 100%; display: flex; flex-direction: column; }
+.titlebar { height: 38px; flex-shrink: 0; }
+.shell-body { flex: 1; display: flex; min-height: 0; }
+.shell-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-4) var(--sp-6) 96px;
+}
+.shell-main > .content { max-width: 560px; margin: 0 auto; }
