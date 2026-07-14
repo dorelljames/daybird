@@ -9,6 +9,7 @@ import TaskCard from "./TaskCard";
 import Composer from "./Composer";
 import OverdueSection from "./OverdueSection";
 import TaskMenu, { TaskMenuState } from "./TaskMenu";
+import EstimatePopover from "./EstimatePopover";
 
 interface TierProps {
   label?: string;
@@ -59,6 +60,7 @@ function TierSection({ label, cls, tier, tasks, now, dragging, onMenu, onDragSta
 export default function TodayView({ now }: { now: number }) {
   const s = useDaybird();
   const [menu, setMenu] = useState<TaskMenuState | null>(null);
+  const [estimating, setEstimating] = useState<TaskMenuState | null>(null);
   const [dragging, setDragging] = useState(false);
   const tasks = todayTasks(s, now);
   const remaining = estimateRemainingMin(s, now);
@@ -94,7 +96,13 @@ export default function TodayView({ now }: { now: number }) {
       <TierSection tier="normal" tasks={normal} {...tierProps} />
       <TierSection label="Later today" cls="tier-later" tier="later" tasks={later} {...tierProps} />
       <OverdueSection now={now} onMenu={openMenu} />
-      <TaskMenu menu={menu} onClose={() => setMenu(null)} now={now} />
+      <TaskMenu
+        menu={menu}
+        onClose={() => setMenu(null)}
+        now={now}
+        onEstimate={(at) => { setMenu(null); setEstimating(at); }}
+      />
+      <EstimatePopover at={estimating} onClose={() => setEstimating(null)} />
     </div>
   );
 }

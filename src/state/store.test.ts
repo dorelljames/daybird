@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { create, StoreApi, UseBoundStore } from "zustand";
 import { storeCreator, DaybirdState } from "./store";
-import { estimateRemainingMin, overdueTasks, todayTasks, workedMinToday } from "./selectors";
-import { atToday, MIN } from "../lib/time";
+import { dayLogs, estimateRemainingMin, overdueTasks, todayTasks, workedMinToday } from "./selectors";
+import { atToday, dayKey, MIN } from "../lib/time";
 
 let store: UseBoundStore<StoreApi<DaybirdState>>;
 beforeEach(() => {
@@ -25,7 +25,7 @@ describe("task state", () => {
     store.getState().dropTask("t-vwra", NOW);
     const t = store.getState().tasks.find((t) => t.id === "t-vwra")!;
     expect(t.status).toBe("dropped");
-    expect(store.getState().tasks.length).toBe(6);
+    expect(store.getState().tasks.length).toBe(7);
   });
   test("completing the active task stops the timer", () => {
     store.getState().startTimer("t-journal", NOW);
@@ -140,6 +140,11 @@ describe("delete, undo, reorder, priority", () => {
     store.getState().reorderToday(["t-vwra", "t-meditate", "t-journal"]);
     expect(todayTasks(store.getState(), NOW).map((t) => t.id)).toEqual(["t-vwra", "t-meditate", "t-journal"]);
   });
+  test("setEstimate updates the estimate and records an event", () => {
+    store.getState().setEstimate("t-meditate", 25);
+    expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.estimateMin).toBe(25);
+    expect(store.getState().events.at(-1)).toMatchObject({ type: "estimated", taskId: "t-meditate", meta: "25" });
+  });
   test("renameTask updates the title, ignores empty input", () => {
     store.getState().renameTask("t-journal", "Evening journal");
     expect(store.getState().tasks.find((t) => t.id === "t-journal")!.title).toBe("Evening journal");
@@ -153,6 +158,57 @@ describe("delete, undo, reorder, priority", () => {
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("later");
     store.getState().setPriority("t-meditate", undefined);
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBeUndefined();
+  });
+});
+
+describe("task events (audit trail)", () => {
+  test("lifecycle actions append events with timestamps", () => {
+    store.getState().addTask("Trace me", 10, NOW);
+    const id = store.getState().tasks.at(-1)!.id;
+    store.getState().setPriority(id, "high");
+    store.getState().renameTask(id, "Trace me properly");
+    store.getState().toggleDone(id, NOW + 5 * MIN);
+    store.getState().toggleDone(id, NOW + 6 * MIN); // restore
+    store.getState().dropTask(id, NOW + 7 * MIN);
+    const types = store.getState().events.filter((e) => e.taskId === id).map((e) => e.type);
+    expect(types).toEqual(["created", "priority", "renamed", "completed", "restored", "dropped"]);
+    const created = store.getState().events.find((e) => e.taskId === id && e.type === "created")!;
+    expect(created.at).toBe(NOW);
+  });
+  test("deleteTask records the event and undo restores the trail", () => {
+    const before = store.getState().events.length;
+    store.getState().deleteTask("t-journal");
+    expect(store.getState().events.at(-1)).toMatchObject({ type: "deleted", taskId: "t-journal" });
+    store.getState().undoToast();
+    expect(store.getState().events.length).toBe(before);
+  });
+});
+
+describe("dayLogs", () => {
+  test("groups a day's entries, finished tasks, and totals", () => {
+    store.getState().toggleDone("t-journal", NOW);
+    const logs = dayLogs(store.getState(), NOW);
+    expect(logs.length).toBe(2); // seed ships a demo yesterday
+    const d = logs[0];
+    expect(d.day).toBe(dayKey(NOW));
+    expect(d.workMin).toBe(80); // seed: journal 50m + vwra 30m
+    expect(d.breakMin).toBe(15);
+    expect(d.finished.map((t) => t.id)).toEqual(["t-journal"]);
+    expect(d.estMin).toBe(15);
+    expect(d.actMin).toBe(50);
+  });
+  test("days sort newest first; yesterday carries its own totals and drops list separately", () => {
+    store.getState().dropTask("t-vwra", NOW);
+    const logs = dayLogs(store.getState(), NOW);
+    expect(logs.length).toBe(2);
+    expect(logs[0].day > logs[1].day).toBe(true);
+    expect(logs[0].dropped.map((t) => t.id)).toEqual(["t-vwra"]);
+    const y = logs[1];
+    expect(y.workMin).toBe(130); // 70m + 60m around a 20m break
+    expect(y.breakMin).toBe(20);
+    expect(y.finished.map((t) => t.id)).toEqual(["t-setup"]);
+    expect(y.estMin).toBe(60);
+    expect(y.actMin).toBe(130); // honest overrun: est 1h → actual 2h10m
   });
 });
 

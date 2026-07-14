@@ -1,6 +1,6 @@
 import { create, StateCreator } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { Priority, Project, Task, TimeEntry } from "../types";
+import { Priority, Project, Task, TaskEvent, TaskEventType, TimeEntry } from "../types";
 import { seedEntries, seedProjects, seedTasks } from "../mock/seed";
 import { dayKey, MIN } from "../lib/time";
 import { closeStaleOpenEntries } from "../lib/hydrate";
@@ -17,6 +17,7 @@ export interface Toast { message: string; }
 interface UndoSnapshot {
   tasks: Task[];
   entries: TimeEntry[];
+  events: TaskEvent[];
   activeTaskId: string | null;
 }
 
@@ -24,6 +25,7 @@ export interface DaybirdState {
   projects: Project[];
   tasks: Task[];
   entries: TimeEntry[];
+  events: TaskEvent[]; // append-only lifecycle audit trail
   activeTaskId: string | null;
   view: View;
   selectedTaskId: string | null;
@@ -44,6 +46,7 @@ export interface DaybirdState {
   reorderToday(orderedIds: string[]): void;
   setPriority(id: string, priority?: Priority): void;
   renameTask(id: string, title: string): void;
+  setEstimate(id: string, estimateMin: number | undefined): void;
   editingId: string | null;
   setEditing(id: string | null): void;
   addTask(title: string, estimateMin?: number, now?: number): void;
@@ -66,13 +69,18 @@ function closeOpenEntry(entries: TimeEntry[], at: number): TimeEntry[] {
 }
 
 function snapshot(s: DaybirdState): UndoSnapshot {
-  return { tasks: s.tasks, entries: s.entries, activeTaskId: s.activeTaskId };
+  return { tasks: s.tasks, entries: s.entries, events: s.events, activeTaskId: s.activeTaskId };
+}
+
+function ev(taskId: string, type: TaskEventType, at: number, meta?: string): TaskEvent {
+  return { id: crypto.randomUUID(), taskId, type, at, meta };
 }
 
 export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
   projects: seedProjects,
   tasks: seedTasks,
   entries: seedEntries,
+  events: [],
   activeTaskId: null,
   view: "today",
   selectedTaskId: null,
@@ -100,6 +108,7 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
         ),
         entries: finishing && s.activeTaskId === id ? closeOpenEntry(s.entries, now) : s.entries,
         activeTaskId: finishing && s.activeTaskId === id ? null : s.activeTaskId,
+        events: [...s.events, ev(id, finishing ? "completed" : "restored", now)],
       };
     }),
 
@@ -118,6 +127,7 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
         ),
         entries: s.activeTaskId === id ? closeOpenEntry(s.entries, now) : s.entries,
         activeTaskId: s.activeTaskId === id ? null : s.activeTaskId,
+        events: [...s.events, ev(id, restoring ? "restored" : "dropped", now)],
         ...(restoring ? {} : { undoSnapshot: snapshot(s), toast: { message: "Task discarded" } }),
       };
     }),
@@ -129,6 +139,7 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
       tasks: s.tasks.filter((t) => t.id !== id),
       entries: s.entries.filter((e) => e.taskId !== id),
       activeTaskId: s.activeTaskId === id ? null : s.activeTaskId,
+      events: [...s.events, ev(id, "deleted", Date.now(), s.tasks.find((t) => t.id === id)?.title)],
     })),
 
   undoToast: () =>
@@ -145,47 +156,67 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
   renameTask: (id, title) =>
     set((s) => {
       const t = title.trim();
-      if (!t) return {};
-      return { tasks: s.tasks.map((x) => (x.id === id ? { ...x, title: t } : x)) };
+      if (!t || s.tasks.find((x) => x.id === id)?.title === t) return {};
+      return {
+        tasks: s.tasks.map((x) => (x.id === id ? { ...x, title: t } : x)),
+        events: [...s.events, ev(id, "renamed", Date.now(), t)],
+      };
     }),
 
   setPriority: (id, priority) =>
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, priority } : t)),
+      events: [...s.events, ev(id, "priority", Date.now(), priority ?? "normal")],
     })),
+
+  setEstimate: (id, estimateMin) =>
+    set((s) => {
+      if (s.tasks.find((t) => t.id === id)?.estimateMin === estimateMin) return {};
+      return {
+        tasks: s.tasks.map((t) => (t.id === id ? { ...t, estimateMin } : t)),
+        events: [...s.events, ev(id, "estimated", Date.now(), estimateMin !== undefined ? String(estimateMin) : undefined)],
+      };
+    }),
 
   editingId: null,
   setEditing: (editingId) => set({ editingId }),
 
   addTask: (title, estimateMin, now = Date.now()) =>
-    set((s) => ({
-      tasks: [
-        ...s.tasks,
-        {
-          id: crypto.randomUUID(),
-          title,
-          estimateMin,
-          scheduledFor: dayKey(now),
-          status: "todo",
-          sortOrder: Math.min(0, ...s.tasks.map((t) => t.sortOrder)) - 1,
-        },
-      ],
-    })),
+    set((s) => {
+      const id = crypto.randomUUID();
+      return {
+        tasks: [
+          ...s.tasks,
+          {
+            id,
+            title,
+            estimateMin,
+            scheduledFor: dayKey(now),
+            status: "todo",
+            sortOrder: Math.min(0, ...s.tasks.map((t) => t.sortOrder)) - 1,
+          },
+        ],
+        events: [...s.events, ev(id, "created", now)],
+      };
+    }),
 
   addToToday: (id, now = Date.now()) =>
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, scheduledFor: dayKey(now) } : t)),
+      events: [...s.events, ev(id, "rescheduled", now, dayKey(now))],
     })),
 
   addAllOverdueToToday: (now = Date.now()) =>
     set((s) => {
       const today = dayKey(now);
+      const moved = s.tasks.filter((t) => t.status === "todo" && t.scheduledFor !== undefined && t.scheduledFor < today);
       return {
         tasks: s.tasks.map((t) =>
           t.status === "todo" && t.scheduledFor && t.scheduledFor < today
             ? { ...t, scheduledFor: today }
             : t
         ),
+        events: [...s.events, ...moved.map((t) => ev(t.id, "rescheduled", now, today))],
       };
     }),
 
@@ -219,6 +250,7 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
     set((s) => {
       if (!s.idleSpan) return {};
       const newTasks: Task[] = [];
+      const newEvents: TaskEvent[] = [];
       const out: TimeEntry[] = [];
       let cursor = s.idleSpan.start;
       let nextSort = Math.max(0, ...s.tasks.map((t) => t.sortOrder)) + 1;
@@ -235,6 +267,7 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
               sortOrder: nextSort++,
             };
             newTasks.push(t);
+            newEvents.push(ev(t.id, "created", cursor));
             taskId = t.id;
           } else if (a.taskId) {
             taskId = a.taskId;
@@ -246,7 +279,12 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
         out.push({ id: crypto.randomUUID(), taskId, kind, start: cursor, end: cursor + a.min * MIN });
         cursor += a.min * MIN;
       }
-      return { tasks: [...s.tasks, ...newTasks], entries: [...s.entries, ...out], idleSpan: null };
+      return {
+        tasks: [...s.tasks, ...newTasks],
+        entries: [...s.entries, ...out],
+        events: [...s.events, ...newEvents],
+        idleSpan: null,
+      };
     }),
 
   setView: (view) => set({ view }),
@@ -263,6 +301,7 @@ export const useDaybird = create<DaybirdState>()(
       projects: s.projects,
       tasks: s.tasks,
       entries: s.entries,
+      events: s.events,
       activeTaskId: s.activeTaskId,
       railOpen: s.railOpen,
       soundOn: s.soundOn,

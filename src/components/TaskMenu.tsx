@@ -11,7 +11,17 @@ export interface TaskMenuState {
   y: number;
 }
 
-export default function TaskMenu({ menu, onClose, now }: { menu: TaskMenuState | null; onClose: () => void; now: number }) {
+export default function TaskMenu({
+  menu,
+  onClose,
+  now,
+  onEstimate,
+}: {
+  menu: TaskMenuState | null;
+  onClose: () => void;
+  now: number;
+  onEstimate: (at: TaskMenuState) => void;
+}) {
   const s = useDaybird();
   const task = menu ? s.tasks.find((t) => t.id === menu.id) : undefined;
 
@@ -86,6 +96,9 @@ export default function TaskMenu({ menu, onClose, now }: { menu: TaskMenuState |
                 </button>
                 <button className="menu-item" onClick={() => run(() => s.setEditing(task.id))}>
                   <span className="menu-icon">✎</span>Rename
+                </button>
+                <button className="menu-item" onClick={() => onEstimate(menu)}>
+                  <span className="menu-icon">◔</span>Change estimate…
                 </button>
                 <div className="menu-div" />
                 <button className="menu-item" onClick={() => run(() => s.dropTask(task.id))}>
