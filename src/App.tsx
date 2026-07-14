@@ -54,22 +54,26 @@ export default function App() {
     });
   }, [now, s.activeTaskId]);
 
-  // widget commands come back as events
+  // widget commands come back as events; acting from the widget surfaces the
+  // app so the next decision (next task, allocate time) is one glance away
   useEffect(() => {
+    const bringToFront = () => {
+      const main = getCurrentWindow();
+      void main.unminimize().then(() => main.setFocus());
+    };
     const un = listen<{ cmd: string }>("daybird://cmd", (e) => {
       const st = useDaybird.getState();
       if (e.payload.cmd === "pause") {
         sfx.stop();
         st.stopTimer();
+        bringToFront();
       }
       if (e.payload.cmd === "done" && st.activeTaskId) {
         playCompletionSound(st, st.activeTaskId, Date.now());
         st.toggleDone(st.activeTaskId);
+        bringToFront();
       }
-      if (e.payload.cmd === "open") {
-        const main = getCurrentWindow();
-        void main.unminimize().then(() => main.setFocus());
-      }
+      if (e.payload.cmd === "open") bringToFront();
     });
     return () => { un.then((f) => f()); };
   }, []);
