@@ -1,0 +1,37 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Daybird app icon: dawn-blue squircle, simple round bird facing the day.
+       macOS convention: content inset ~10% on a transparent 1024 canvas. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5AA9FF"/>
+      <stop offset="1" stop-color="#0A6BE0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#sky)"/>
+
+  <!-- ground line the bird sits on -->
+  <rect x="272" y="716" width="480" height="26" rx="13" fill="#FFFFFF" opacity="0.35"/>
+
+  <!-- tail -->
+  <path d="M 372 520 Q 282 470 262 396 Q 356 420 412 470 Z" fill="#FFFFFF"/>
+
+  <!-- body + head as one silhouette -->
+  <path d="M 512 730
+           C 400 730 322 652 322 545
+           C 322 448 390 372 488 360
+           C 506 275 572 320 598 330
+           C 686 330 716 400 716 452
+           C 716 480 710 504 698 526
+           C 672 650 606 730 512 730 Z"
+        fill="#FFFFFF"/>
+
+  <!-- wing: whisper of dawn blue -->
+  <ellipse cx="462" cy="560" rx="104" ry="76" fill="#D6EAFF" transform="rotate(-24 462 560)"/>
+
+  <!-- beak -->
+  <path d="M 706 448 L 786 470 L 704 500 Q 716 474 706 448 Z" fill="#FFB340"/>
+
+  <!-- eye -->
+  <circle cx="640" cy="432" r="20" fill="#0A6BE0"/>
+</svg>

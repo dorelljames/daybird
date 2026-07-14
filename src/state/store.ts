@@ -26,6 +26,8 @@ export interface DaybirdState {
   composerOpen: boolean;
   soundOn: boolean;
   toggleSound(): void;
+  helpOpen: boolean;
+  setHelp(open: boolean): void;
   toast: Toast | null;
   undoSnapshot: UndoSnapshot | null;
   toggleDone(id: string, now?: number): void;
@@ -69,6 +71,8 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
   composerOpen: false,
   soundOn: true,
   toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
+  helpOpen: false,
+  setHelp: (helpOpen) => set({ helpOpen }),
   toast: null,
   undoSnapshot: null,
 

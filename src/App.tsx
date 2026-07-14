@@ -10,6 +10,7 @@ import IdleSheet from "./components/IdleSheet";
 import Toast from "./components/Toast";
 import Dock from "./components/Dock";
 import PlaceholderView from "./components/PlaceholderView";
+import ShortcutsSheet from "./components/ShortcutsSheet";
 import { useDaybird, View } from "./state/store";
 import { openEntry, todayTasks, workedMinToday } from "./state/selectors";
 import { MIN } from "./lib/time";
@@ -110,6 +111,8 @@ export default function App() {
     }
     function onKey(e: KeyboardEvent) {
       const st = useDaybird.getState();
+      if (st.helpOpen && e.key === "Escape") { e.preventDefault(); return st.setHelp(false); }
+      if (matchHotkey(e, "mod+/")) { e.preventDefault(); return st.setHelp(!st.helpOpen); }
       for (let i = 0; i < VIEW_ORDER.length; i++) {
         if (matchHotkey(e, `mod+${i + 1}`)) { e.preventDefault(); return st.setView(VIEW_ORDER[i]); }
       }
@@ -119,6 +122,7 @@ export default function App() {
 
       const target = e.target as HTMLElement;
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+      if (matchHotkey(e, "shift+?")) { e.preventDefault(); return st.setHelp(!st.helpOpen); }
       if (st.view !== "today") return;
 
       const list = todayTasks(st).filter((t) => t.status === "todo");
@@ -163,6 +167,7 @@ export default function App() {
         >
           {s.soundOn ? "🔊" : "🔇"}
         </button>
+        <button className="rail-toggle" title="Keyboard shortcuts (?)" onClick={() => s.setHelp(!s.helpOpen)}>?</button>
         <button className="rail-toggle" title="Toggle time rail (⌘\)" onClick={() => s.toggleRail()}>◫</button>
       </div>
       <div className="shell-body">
@@ -192,6 +197,7 @@ export default function App() {
       </div>
       <Dock now={now} />
       <IdleSheet />
+      <ShortcutsSheet />
       <Toast />
     </div>
     </MotionConfig>
