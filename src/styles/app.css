@@ -177,6 +177,37 @@ input { font: inherit; color: inherit; }
 .w-actions button:active { transform: scale(0.96); }
 .w-actions .w-done { background: var(--green-soft); color: var(--green); border-color: transparent; }
 
+/* === log view === */
+.log-day {
+  background: var(--surface);
+  border-radius: var(--radius-m);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  box-shadow: var(--shadow-1);
+}
+.log-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); }
+.log-day-head h2 { font-size: 15px; letter-spacing: -0.2px; }
+.log-day-stats { color: var(--ink-2); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.log-strip-wrap { margin: var(--sp-3) 0 var(--sp-2); }
+.log-strip {
+  position: relative; height: 12px;
+  background: var(--surface-2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.log-blk { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.log-work { background: var(--accent); opacity: 0.65; }
+.log-break { background: var(--green); opacity: 0.6; }
+.log-discarded { background: var(--ink-3); opacity: 0.35; }
+.log-strip-times { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 9.5px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.log-tasks { margin-top: var(--sp-2); display: flex; flex-direction: column; gap: 3px; }
+.log-task { display: flex; align-items: center; gap: var(--sp-2); font-size: 13px; }
+.log-glyph { width: 16px; text-align: center; color: var(--ink-3); font-size: 11px; flex-shrink: 0; }
+.log-glyph-done { color: var(--accent); }
+.log-task-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--ink-3); }
+.log-task-dropped .log-task-title { color: var(--ink-3); }
+.log-task-min { margin-left: auto; color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
 /* === shortcuts sheet === */
 .help-sheet { width: 360px; }
 .help-rows { display: flex; flex-direction: column; gap: var(--sp-2); }

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { create, StoreApi, UseBoundStore } from "zustand";
 import { storeCreator, DaybirdState } from "./store";
-import { estimateRemainingMin, overdueTasks, todayTasks, workedMinToday } from "./selectors";
-import { atToday, MIN } from "../lib/time";
+import { dayLogs, estimateRemainingMin, overdueTasks, todayTasks, workedMinToday } from "./selectors";
+import { atToday, dayKey, MIN } from "../lib/time";
 
 let store: UseBoundStore<StoreApi<DaybirdState>>;
 beforeEach(() => {
@@ -153,6 +153,37 @@ describe("delete, undo, reorder, priority", () => {
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("later");
     store.getState().setPriority("t-meditate", undefined);
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBeUndefined();
+  });
+});
+
+describe("dayLogs", () => {
+  test("groups a day's entries, finished tasks, and totals", () => {
+    store.getState().toggleDone("t-journal", NOW);
+    const logs = dayLogs(store.getState(), NOW);
+    expect(logs.length).toBe(1);
+    const d = logs[0];
+    expect(d.day).toBe(dayKey(NOW));
+    expect(d.workMin).toBe(80); // seed: journal 50m + vwra 30m
+    expect(d.breakMin).toBe(15);
+    expect(d.finished.map((t) => t.id)).toEqual(["t-journal"]);
+    expect(d.estMin).toBe(15);
+    expect(d.actMin).toBe(50);
+  });
+  test("days sort newest first and dropped tasks list separately", () => {
+    store.getState().dropTask("t-vwra", NOW);
+    const yStart = atToday(9, 0) - 24 * 60 * MIN;
+    const state = {
+      ...store.getState(),
+      entries: [
+        ...store.getState().entries,
+        { id: "y1", taskId: "t-inbox", kind: "work" as const, start: yStart, end: yStart + 30 * MIN },
+      ],
+    };
+    const logs = dayLogs(state, NOW);
+    expect(logs.length).toBe(2);
+    expect(logs[0].day > logs[1].day).toBe(true);
+    expect(logs[0].dropped.map((t) => t.id)).toEqual(["t-vwra"]);
+    expect(logs[1].workMin).toBe(30);
   });
 });
 

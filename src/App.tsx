@@ -9,6 +9,7 @@ import TimeRail from "./components/TimeRail";
 import IdleSheet from "./components/IdleSheet";
 import Toast from "./components/Toast";
 import Dock from "./components/Dock";
+import LogView from "./components/LogView";
 import PlaceholderView from "./components/PlaceholderView";
 import ShortcutsSheet from "./components/ShortcutsSheet";
 import { useDaybird, View } from "./state/store";
@@ -217,9 +218,7 @@ export default function App() {
               {s.view === "projects" && (
                 <PlaceholderView title="Projects" hint="Project spaces land in Phase 2." />
               )}
-              {s.view === "log" && (
-                <PlaceholderView title="Log" hint="The truthful journal of your days — finished, dropped, and tracked time. Lands in Phase 2." />
-              )}
+              {s.view === "log" && <LogView now={now} />}
             </motion.div>
           </AnimatePresence>
         </main>
