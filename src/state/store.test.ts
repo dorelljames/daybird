@@ -116,12 +116,12 @@ describe("delete, undo, reorder, priority", () => {
     store.getState().renameTask("t-journal", "   ");
     expect(store.getState().tasks.find((t) => t.id === "t-journal")!.title).toBe("Evening journal");
   });
-  test("cyclePriority walks normal → high → later → normal", () => {
-    store.getState().cyclePriority("t-meditate");
+  test("setPriority assigns and clears tiers directly", () => {
+    store.getState().setPriority("t-meditate", "high");
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("high");
-    store.getState().cyclePriority("t-meditate");
+    store.getState().setPriority("t-meditate", "later");
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBe("later");
-    store.getState().cyclePriority("t-meditate");
+    store.getState().setPriority("t-meditate", undefined);
     expect(store.getState().tasks.find((t) => t.id === "t-meditate")!.priority).toBeUndefined();
   });
 });

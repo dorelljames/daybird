@@ -3,7 +3,7 @@ import { useDaybird } from "../state/store";
 import { overdueTasks } from "../state/selectors";
 import TaskCard from "./TaskCard";
 
-export default function OverdueSection({ now }: { now: number }) {
+export default function OverdueSection({ now, onMenu }: { now: number; onMenu?: (id: string) => (e: React.MouseEvent) => void }) {
   const s = useDaybird();
   const overdue = overdueTasks(s, now);
   if (overdue.length === 0) return null;
@@ -18,7 +18,7 @@ export default function OverdueSection({ now }: { now: number }) {
         <AnimatePresence initial={false}>
           {overdue.map((t) => (
             <div className="overdue-row" key={t.id}>
-              <TaskCard task={t} now={now} selected={s.selectedTaskId === t.id} />
+              <TaskCard task={t} now={now} selected={s.selectedTaskId === t.id} onMenu={onMenu?.(t.id)} />
               <button className="pill-btn overdue-pull" onClick={() => s.addToToday(t.id)}>Today</button>
             </div>
           ))}

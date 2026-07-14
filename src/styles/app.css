@@ -228,6 +228,36 @@ input { font: inherit; color: inherit; }
 .tier-priority .task-active { border-color: var(--accent); border-left-color: var(--priority); }
 .tier-later .task { opacity: 0.8; }
 .tier-later .tier-label { color: var(--ink-3); }
+.tier-drop-hint {
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-m);
+  padding: var(--sp-3);
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+/* === task context menu === */
+.menu-scrim { position: fixed; inset: 0; z-index: 60; }
+.menu {
+  position: fixed; z-index: 61; min-width: 196px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-2);
+  padding: 4px;
+  display: flex; flex-direction: column;
+}
+.menu-item {
+  display: flex; align-items: center; gap: var(--sp-2);
+  text-align: left; font-size: 12.5px; color: var(--ink);
+  padding: 7px 10px; border-radius: 7px;
+}
+.menu-item:hover { background: var(--bg); }
+.menu-icon { width: 16px; text-align: center; font-size: 11px; color: var(--ink-2); flex-shrink: 0; }
+.menu-flag { color: var(--priority); }
+.menu-danger, .menu-danger .menu-icon { color: var(--red); }
+.menu-div { height: 1px; background: var(--line); margin: 4px 6px; }
 .task-list > * { position: relative; }
 
 /* === dock: active task + view switcher === */

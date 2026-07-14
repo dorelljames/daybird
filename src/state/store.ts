@@ -1,6 +1,6 @@
 import { create, StateCreator } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { Project, Task, TimeEntry } from "../types";
+import { Priority, Project, Task, TimeEntry } from "../types";
 import { seedEntries, seedProjects, seedTasks } from "../mock/seed";
 import { dayKey, MIN } from "../lib/time";
 import { closeStaleOpenEntries } from "../lib/hydrate";
@@ -36,8 +36,10 @@ export interface DaybirdState {
   undoToast(): void;
   dismissToast(): void;
   reorderToday(orderedIds: string[]): void;
-  cyclePriority(id: string): void;
+  setPriority(id: string, priority?: Priority): void;
   renameTask(id: string, title: string): void;
+  editingId: string | null;
+  setEditing(id: string | null): void;
   addTask(title: string, estimateMin?: number, now?: number): void;
   addToToday(id: string, now?: number): void;
   addAllOverdueToToday(now?: number): void;
@@ -139,14 +141,13 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
       return { tasks: s.tasks.map((x) => (x.id === id ? { ...x, title: t } : x)) };
     }),
 
-  cyclePriority: (id) =>
+  setPriority: (id, priority) =>
     set((s) => ({
-      tasks: s.tasks.map((t) =>
-        t.id !== id
-          ? t
-          : { ...t, priority: t.priority === "high" ? "later" : t.priority === "later" ? undefined : "high" }
-      ),
+      tasks: s.tasks.map((t) => (t.id === id ? { ...t, priority } : t)),
     })),
+
+  editingId: null,
+  setEditing: (editingId) => set({ editingId }),
 
   addTask: (title, estimateMin, now = Date.now()) =>
     set((s) => ({

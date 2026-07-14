@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { motion, Reorder } from "motion/react";
 import { Task } from "../types";
 import { useDaybird } from "../state/store";
@@ -13,18 +13,20 @@ interface Props {
   now: number;
   selected: boolean;
   reorderable?: boolean;
+  onMenu?: (e: React.MouseEvent) => void;
+  onDragStateChange?: (dragging: boolean) => void;
 }
 
-export default function TaskCard({ task, now, selected, reorderable = false }: Props) {
+export default function TaskCard({ task, now, selected, reorderable = false, onMenu, onDragStateChange }: Props) {
   const s = useDaybird();
   const alt = useAltKey();
-  const [editing, setEditing] = useState(false);
+  const editing = s.editingId === task.id;
   const editRef = useRef<HTMLInputElement>(null);
   const active = s.activeTaskId === task.id;
 
   function commitEdit() {
     if (editRef.current) s.renameTask(task.id, editRef.current.value);
-    setEditing(false);
+    s.setEditing(null);
   }
   const open = s.entries.find((e) => e.end === null && e.taskId === task.id);
   const elapsedSec = open ? Math.max(0, Math.floor((now - open.start) / 1000)) : 0;
@@ -38,6 +40,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
     "data-task-id": task.id,
     className: `task ${active ? "task-active" : ""} ${terminal ? `task-${task.status}` : ""} ${selected ? "task-selected" : ""}`,
     onClick: () => s.setSelected(task.id),
+    onContextMenu: onMenu,
     ...(reorderable
       ? {
           initial: { opacity: 0 },
@@ -82,7 +85,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
         {task.status === "dropped" && <span className="task-x">×</span>}
       </motion.button>
 
-      <div className="task-body" onDoubleClick={(e) => { e.stopPropagation(); if (task.status === "todo") setEditing(true); }}>
+      <div className="task-body" onDoubleClick={(e) => { e.stopPropagation(); if (task.status === "todo") s.setEditing(task.id); }}>
         {editing ? (
           <input
             ref={editRef}
@@ -93,7 +96,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
             onBlur={commitEdit}
             onKeyDown={(e) => {
               if (e.key === "Enter") commitEdit();
-              if (e.key === "Escape") setEditing(false);
+              if (e.key === "Escape") s.setEditing(null);
             }}
             onClick={(e) => e.stopPropagation()}
           />
@@ -123,9 +126,9 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
       <div className="task-actions">
         {task.status === "todo" && (
           <button
-            className={`task-flag ${task.priority === "high" ? "is-high" : ""} ${task.priority === "later" ? "is-later" : ""}`}
-            title={task.priority === "high" ? "Move to Later" : task.priority === "later" ? "Back to normal" : "Promote to Priority"}
-            onClick={(e) => { e.stopPropagation(); s.cyclePriority(task.id); }}
+            className={`task-flag ${task.priority === "high" ? "is-high" : ""}`}
+            title={task.priority === "high" ? "Remove from Priority" : "Move to Priority"}
+            onClick={(e) => { e.stopPropagation(); s.setPriority(task.id, task.priority === "high" ? undefined : "high"); }}
           >
             ⚑
           </button>
@@ -164,7 +167,27 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
   );
 
   return reorderable ? (
-    <Reorder.Item value={task.id} dragListener={!editing} onDragEnd={() => sfx.drop()} {...rootProps}>{inner}</Reorder.Item>
+    <Reorder.Item
+      value={task.id}
+      dragListener={!editing}
+      onDragStart={() => onDragStateChange?.(true)}
+      onDragEnd={(_e, info) => {
+        onDragStateChange?.(false);
+        sfx.drop();
+        // cross-tier drop: whichever tier section the pointer landed in wins
+        const target = Array.from(document.querySelectorAll<HTMLElement>("[data-tier]")).find((n) => {
+          const r = n.getBoundingClientRect();
+          return info.point.x >= r.left && info.point.x <= r.right && info.point.y >= r.top && info.point.y <= r.bottom;
+        })?.dataset.tier;
+        if (target) {
+          const priority = target === "high" ? "high" as const : target === "later" ? "later" as const : undefined;
+          if (priority !== task.priority) s.setPriority(task.id, priority);
+        }
+      }}
+      {...rootProps}
+    >
+      {inner}
+    </Reorder.Item>
   ) : (
     <motion.div {...rootProps}>{inner}</motion.div>
   );
