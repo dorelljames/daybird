@@ -85,7 +85,7 @@ export default function TaskMenu({ menu, onClose, now }: { menu: TaskMenuState |
                   <span className="menu-icon">✓</span>Complete
                 </button>
                 <button className="menu-item" onClick={() => run(() => s.setEditing(task.id))}>
-                  <span className="menu-icon">✎</span>Rename
+                  <span className="menu-icon">✎</span>Rename / estimate
                 </button>
                 <div className="menu-div" />
                 <button className="menu-item" onClick={() => run(() => s.dropTask(task.id))}>
