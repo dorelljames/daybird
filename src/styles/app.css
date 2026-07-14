@@ -69,3 +69,21 @@ input { font: inherit; color: inherit; }
 .task-done .task-title { text-decoration: line-through; color: var(--ink-3); }
 .task-done, .task-dropped { opacity: 0.6; }
 .task-dropped .task-title { text-decoration: line-through; color: var(--ink-3); text-decoration-color: var(--ink-3); }
+
+/* === composer === */
+.today-head-row { display: flex; align-items: center; justify-content: space-between; }
+.add-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 15px; display: flex; align-items: center; justify-content: center;
+}
+.composer { overflow: hidden; margin-bottom: var(--sp-2); }
+.composer input {
+  width: 100%;
+  background: var(--surface);
+  border: none; outline: none;
+  border-radius: var(--radius-m);
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: 0 0 0 2px var(--accent), var(--shadow-2);
+  font-size: 14px;
+}

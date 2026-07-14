@@ -23,18 +23,27 @@ export default function TaskCard({ task, now, selected }: { task: Task; now: num
       className={`task ${active ? "task-active" : ""} ${terminal ? `task-${task.status}` : ""} ${selected ? "task-selected" : ""}`}
       onClick={() => s.setSelected(task.id)}
     >
-      <button
+      <motion.button
         className={`task-check ${task.status === "done" ? "is-done" : ""}`}
         aria-label="complete"
+        whileTap={{ scale: 0.85 }}
+        animate={task.status === "done" ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 22 }}
         onClick={(e) => { e.stopPropagation(); s.toggleDone(task.id); }}
       >
         {task.status === "done" && (
           <svg viewBox="0 0 12 12" width="12" height="12">
-            <path d="M2.5 6.5 L5 9 L9.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <motion.path
+              d="M2.5 6.5 L5 9 L9.5 3.5"
+              fill="none" stroke="currentColor" strokeWidth="1.8"
+              strokeLinecap="round" strokeLinejoin="round"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            />
           </svg>
         )}
         {task.status === "dropped" && <span className="task-x">×</span>}
-      </button>
+      </motion.button>
 
       <div className="task-body">
         <div className="task-title">{task.title}</div>
