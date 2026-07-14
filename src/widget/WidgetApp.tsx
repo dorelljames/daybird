@@ -40,7 +40,8 @@ function MarqueeTitle({ text }: { text: string }) {
       ref={outerRef}
       className={`w-title w-marquee ${dist > 0 ? "is-overflow" : ""}`}
       animate={masks}
-      transition={dist > 0 ? glide : undefined}
+      // scope transitions: the layout morph must NOT inherit the infinite glide
+      transition={{ layout: morph, "--fadeL": glide, "--fadeR": glide } as never}
     >
       <motion.span
         ref={innerRef}
