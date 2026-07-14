@@ -188,6 +188,15 @@ export default function App() {
     <MotionConfig reducedMotion="user">
     <div className="shell">
       <div className="titlebar" data-tauri-drag-region>
+        {import.meta.env.DEV && (
+          <button
+            className="rail-toggle"
+            title="Reset demo data (dev builds only)"
+            onClick={() => { localStorage.removeItem("daybird-v1"); location.reload(); }}
+          >
+            ⟲
+          </button>
+        )}
         <button className="rail-toggle" title="Log time away (⇧⌘I)" onClick={() => openAwaySheet()}>
           💤
         </button>
