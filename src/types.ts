@@ -27,6 +27,7 @@ export type TaskEventType =
   | "restored"
   | "dropped"
   | "renamed"
+  | "estimated"
   | "priority"
   | "rescheduled"
   | "deleted";

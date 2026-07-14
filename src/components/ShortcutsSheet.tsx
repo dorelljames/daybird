@@ -10,6 +10,7 @@ const ROWS: Array<[string[], string]> = [
   [["X"], "Discard selected"],
   [["⌥", "hover"], "Reveal delete-forever on a task"],
   [["2×click"], "Rename a task title"],
+  [["~30m"], "Trailing ~time sets the estimate (add & rename)"],
   [["⌘", "\\"], "Toggle time rail"],
   [["⇧", "⌘", "I"], "Simulate idle sheet"],
   [["?"], "This cheat sheet"],

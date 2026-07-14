@@ -46,6 +46,7 @@ export interface DaybirdState {
   reorderToday(orderedIds: string[]): void;
   setPriority(id: string, priority?: Priority): void;
   renameTask(id: string, title: string): void;
+  setEstimate(id: string, estimateMin: number | undefined): void;
   editingId: string | null;
   setEditing(id: string | null): void;
   addTask(title: string, estimateMin?: number, now?: number): void;
@@ -167,6 +168,15 @@ export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, priority } : t)),
       events: [...s.events, ev(id, "priority", Date.now(), priority ?? "normal")],
     })),
+
+  setEstimate: (id, estimateMin) =>
+    set((s) => {
+      if (s.tasks.find((t) => t.id === id)?.estimateMin === estimateMin) return {};
+      return {
+        tasks: s.tasks.map((t) => (t.id === id ? { ...t, estimateMin } : t)),
+        events: [...s.events, ev(id, "estimated", Date.now(), estimateMin !== undefined ? String(estimateMin) : undefined)],
+      };
+    }),
 
   editingId: null,
   setEditing: (editingId) => set({ editingId }),

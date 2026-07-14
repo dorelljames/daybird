@@ -7,6 +7,7 @@ import { fmtClock, fmtMin } from "../lib/time";
 import { useAltKey } from "../hooks/useAltKey";
 import { sfx } from "../lib/sound";
 import { playCompletionSound } from "../lib/celebrate";
+import { parseQuickAdd } from "../lib/quickadd";
 
 interface Props {
   task: Task;
@@ -25,7 +26,11 @@ export default function TaskCard({ task, now, selected, reorderable = false, onM
   const active = s.activeTaskId === task.id;
 
   function commitEdit() {
-    if (editRef.current) s.renameTask(task.id, editRef.current.value);
+    if (editRef.current) {
+      const parsed = parseQuickAdd(editRef.current.value);
+      s.renameTask(task.id, parsed.title);
+      if (parsed.estimateMin !== undefined) s.setEstimate(task.id, parsed.estimateMin);
+    }
     s.setEditing(null);
   }
   const open = s.entries.find((e) => e.end === null && e.taskId === task.id);
@@ -90,7 +95,7 @@ export default function TaskCard({ task, now, selected, reorderable = false, onM
           <input
             ref={editRef}
             className="task-edit"
-            defaultValue={task.title}
+            defaultValue={task.estimateMin !== undefined ? `${task.title} ~${fmtMin(task.estimateMin)}` : task.title}
             autoFocus
             onFocus={(e) => e.currentTarget.select()}
             onBlur={commitEdit}
