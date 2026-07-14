@@ -7,7 +7,7 @@ import { useNow } from "../hooks/useNow";
 
 // Long titles glide to reveal their end (pause → drift → pause → back);
 // short titles stay put. Fade masks replace hard clipping while moving.
-function MarqueeTitle({ text, onDoubleClick }: { text: string; onDoubleClick?: () => void }) {
+function MarqueeTitle({ text, onDoubleClick, onPointerDown }: { text: string; onDoubleClick?: () => void; onPointerDown?: (e: React.PointerEvent) => void }) {
   const outerRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const [dist, setDist] = useState(0);
@@ -41,7 +41,8 @@ function MarqueeTitle({ text, onDoubleClick }: { text: string; onDoubleClick?: (
       layout="position"
       ref={outerRef}
       onDoubleClick={onDoubleClick}
-      title={onDoubleClick ? "Double-click to open in Daybird" : undefined}
+      onPointerDown={onPointerDown}
+      title={onDoubleClick ? "Drag to move · double-click to open in Daybird" : undefined}
       className={`w-title w-marquee ${dist > 0 ? "is-overflow" : ""}`}
       animate={masks}
       // scope transitions: the layout morph must NOT inherit the infinite glide
@@ -69,6 +70,26 @@ interface WidgetState {
 }
 
 const morph = { type: "spring", stiffness: 480, damping: 36 } as const;
+
+// Drag the window from anywhere this is attached — but only once the pointer
+// actually moves, so clicks and double-clicks on the same element still work.
+function dragOnMove(e: React.PointerEvent) {
+  if (e.button !== 0) return;
+  const sx = e.clientX;
+  const sy = e.clientY;
+  const move = (ev: PointerEvent) => {
+    if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 4) {
+      cleanup();
+      void getCurrentWindow().startDragging();
+    }
+  };
+  const cleanup = () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", cleanup);
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", cleanup);
+}
 
 export default function WidgetApp() {
   const [snap, setSnap] = useState<{ st: WidgetState; at: number } | null>(null);
@@ -111,7 +132,12 @@ export default function WidgetApp() {
     return (
       <MotionConfig reducedMotion="user">
         <div className={rootClass} data-tauri-drag-region>
-          <button className="widget widget-pill widget-idle" title="Open Daybird" onClick={() => emit("daybird://cmd", { cmd: "open" })}>
+          <button
+            className="widget widget-pill widget-idle"
+            title="Click to open Daybird · drag to move"
+            onClick={() => emit("daybird://cmd", { cmd: "open" })}
+            onPointerDown={dragOnMove}
+          >
             <span className="w-ind w-ind-dot w-dot-idle" />
             <span className="w-title w-title-idle">Not tracking</span>
           </button>
@@ -153,6 +179,7 @@ export default function WidgetApp() {
               <MarqueeTitle
                 text={st.title}
                 onDoubleClick={() => emit("daybird://cmd", { cmd: "open-task", taskId: st.taskId })}
+                onPointerDown={dragOnMove}
               />
               <AnimatePresence initial={false}>
                 {hover && (
