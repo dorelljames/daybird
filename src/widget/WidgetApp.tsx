@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import { AnimatePresence, motion, MotionConfig, Transition } from "motion/react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { fmtClock } from "../lib/time";
 
@@ -21,17 +21,32 @@ function MarqueeTitle({ text }: { text: string }) {
     return () => ro.disconnect();
   }, [text]);
 
+  const glide: Transition = {
+    duration: Math.max(6, dist / 25 + 4),
+    times: [0, 0.3, 0.7, 1],
+    repeat: Infinity,
+    repeatType: "reverse",
+    ease: "linear",
+  };
+
+  // fades track the glide: a side only fades while text is hidden on that side
+  const masks = dist > 0
+    ? ({ "--fadeL": ["0px", "0px", "12px", "12px"], "--fadeR": ["12px", "12px", "0px", "0px"] } as never)
+    : ({ "--fadeL": "0px", "--fadeR": "0px" } as never);
+
   return (
-    <motion.span layout="position" ref={outerRef} className={`w-title w-marquee ${dist > 0 ? "is-overflow" : ""}`}>
+    <motion.span
+      layout="position"
+      ref={outerRef}
+      className={`w-title w-marquee ${dist > 0 ? "is-overflow" : ""}`}
+      animate={masks}
+      transition={dist > 0 ? glide : undefined}
+    >
       <motion.span
         ref={innerRef}
         className="w-marquee-inner"
         animate={dist > 0 ? { x: [0, 0, -dist, -dist] } : { x: 0 }}
-        transition={
-          dist > 0
-            ? { duration: Math.max(6, dist / 25 + 4), times: [0, 0.3, 0.7, 1], repeat: Infinity, repeatType: "reverse", ease: "linear" }
-            : undefined
-        }
+        transition={dist > 0 ? glide : undefined}
       >
         {text}
       </motion.span>
