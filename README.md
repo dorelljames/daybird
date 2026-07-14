@@ -27,9 +27,7 @@ Daybird started as a replacement for [Super Productivity](https://github.com/joh
 
 ## Install
 
-Grab the `.dmg` from [Releases](../../releases) (Apple Silicon).
-
-> The app is not yet signed/notarized. On first launch macOS will object: go to **System Settings → Privacy &amp; Security → "Open Anyway"**. Signing is on the roadmap.
+Grab the `.dmg` from [Releases](../../releases) (Apple Silicon). Builds from v0.1.1 onward are signed and notarized — they open like any Mac app.
 
 ## Build from source
 
