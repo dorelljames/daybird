@@ -46,6 +46,7 @@ export interface DaybirdState {
   startTimer(id: string, now?: number): void;
   stopTimer(now?: number): void;
   openIdleSheet(span: IdleSpan): void;
+  dismissIdleSheet(): void;
   resolveIdle(taskMin: number, breakMin: number, skipMin: number): void;
   setView(v: View): void;
   setSelected(id: string | null): void;
@@ -195,6 +196,8 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
 
   openIdleSheet: (span) =>
     set((s) => ({ entries: closeOpenEntry(s.entries, span.start), idleSpan: span })),
+
+  dismissIdleSheet: () => set({ idleSpan: null }),
 
   resolveIdle: (taskMin, breakMin, skipMin) =>
     set((s) => {

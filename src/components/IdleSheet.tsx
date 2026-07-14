@@ -27,6 +27,14 @@ export default function IdleSheet() {
     }
   }, [s.idleSpan, s.activeTaskId]);
 
+  // Esc dismisses without writing anything — the time just stays unallocated
+  useEffect(() => {
+    if (!s.idleSpan) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") s.dismissIdleSheet(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [s.idleSpan]);
+
   if (!s.idleSpan) return null;
   const spanMin = minutesBetween(s.idleSpan.start, s.idleSpan.end);
   const parsed = editedMin === null ? NaN : parseInt(editedMin, 10);
@@ -67,9 +75,16 @@ export default function IdleSheet() {
 
   return (
     <AnimatePresence>
-      <motion.div className="sheet-scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <motion.div
+        className="sheet-scrim"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => s.dismissIdleSheet()}
+      >
         <motion.div
           className="sheet"
+          onClick={(e) => e.stopPropagation()}
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 60, opacity: 0 }}
