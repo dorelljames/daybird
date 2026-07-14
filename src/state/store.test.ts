@@ -61,6 +61,36 @@ describe("timer", () => {
   });
 });
 
+describe("idle allocation v2 — segments", () => {
+  test("writes sequential entries for assigned tasks, breaks, and skips", () => {
+    const span = { start: NOW, end: NOW + 62 * MIN };
+    store.getState().openIdleSheet(span);
+    store.getState().resolveIdleSegments([
+      { kind: "task", taskId: "t-journal", min: 20 },
+      { kind: "task", newTitle: "Run 5k", min: 42 },
+    ]);
+    const s = store.getState();
+    expect(s.idleSpan).toBeNull();
+    const written = s.entries.filter((e) => e.start >= NOW && e.end !== null && e.end <= NOW + 62 * MIN);
+    expect(written[0]).toMatchObject({ kind: "work", taskId: "t-journal", start: NOW, end: NOW + 20 * MIN });
+    const created = s.tasks.find((t) => t.title === "Run 5k")!;
+    expect(created).toBeDefined();
+    expect(created.status).toBe("todo");
+    expect(written[1]).toMatchObject({ kind: "work", taskId: created.id, start: NOW + 20 * MIN, end: NOW + 62 * MIN });
+  });
+  test("break and skip segments keep their kinds and zero-minute segments are dropped", () => {
+    store.getState().openIdleSheet({ start: NOW, end: NOW + 30 * MIN });
+    store.getState().resolveIdleSegments([
+      { kind: "break", min: 25 },
+      { kind: "task", taskId: "t-vwra", min: 0 },
+      { kind: "skip", min: 5 },
+    ]);
+    const written = store.getState().entries.filter((e) => e.start >= NOW && e.end !== null && e.end <= NOW + 30 * MIN);
+    expect(written.map((e) => e.kind)).toEqual(["break", "discarded"]);
+    expect(written[0].end).toBe(NOW + 25 * MIN);
+  });
+});
+
 describe("idle allocation", () => {
   test("openIdleSheet trims the running entry to idle start", () => {
     store.getState().startTimer("t-vwra", NOW);

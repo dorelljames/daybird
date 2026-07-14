@@ -7,6 +7,12 @@ import { closeStaleOpenEntries } from "../lib/hydrate";
 
 export type View = "today" | "upcoming" | "projects" | "log";
 export interface IdleSpan { start: number; end: number; }
+export interface IdleAllocation {
+  kind: "task" | "break" | "skip";
+  taskId?: string; // existing task target
+  newTitle?: string; // create-and-assign
+  min: number;
+}
 export interface Toast { message: string; }
 interface UndoSnapshot {
   tasks: Task[];
@@ -48,6 +54,7 @@ export interface DaybirdState {
   openIdleSheet(span: IdleSpan): void;
   dismissIdleSheet(): void;
   resolveIdle(taskMin: number, breakMin: number, skipMin: number): void;
+  resolveIdleSegments(allocs: IdleAllocation[]): void;
   setView(v: View): void;
   setSelected(id: string | null): void;
   toggleRail(): void;
@@ -62,7 +69,7 @@ function snapshot(s: DaybirdState): UndoSnapshot {
   return { tasks: s.tasks, entries: s.entries, activeTaskId: s.activeTaskId };
 }
 
-export const storeCreator: StateCreator<DaybirdState> = (set) => ({
+export const storeCreator: StateCreator<DaybirdState> = (set, get) => ({
   projects: seedProjects,
   tasks: seedTasks,
   entries: seedEntries,
@@ -199,19 +206,47 @@ export const storeCreator: StateCreator<DaybirdState> = (set) => ({
 
   dismissIdleSheet: () => set({ idleSpan: null }),
 
-  resolveIdle: (taskMin, breakMin, skipMin) =>
+  resolveIdle: (taskMin, breakMin, skipMin) => {
+    const activeId = get().activeTaskId ?? undefined;
+    get().resolveIdleSegments([
+      { kind: "task", taskId: activeId, min: activeId ? taskMin : 0 },
+      { kind: "break", min: breakMin },
+      { kind: "skip", min: skipMin },
+    ]);
+  },
+
+  resolveIdleSegments: (allocs) =>
     set((s) => {
       if (!s.idleSpan) return {};
-      const { start } = s.idleSpan;
-      const mk = (kind: TimeEntry["kind"], taskId: string | null, from: number, min: number): TimeEntry => ({
-        id: crypto.randomUUID(), taskId, kind, start: from, end: from + min * MIN,
-      });
+      const newTasks: Task[] = [];
       const out: TimeEntry[] = [];
-      let cursor = start;
-      if (taskMin > 0) { out.push(mk("work", s.activeTaskId, cursor, taskMin)); cursor += taskMin * MIN; }
-      if (breakMin > 0) { out.push(mk("break", null, cursor, breakMin)); cursor += breakMin * MIN; }
-      if (skipMin > 0) { out.push(mk("discarded", null, cursor, skipMin)); }
-      return { entries: [...s.entries, ...out], idleSpan: null };
+      let cursor = s.idleSpan.start;
+      let nextSort = Math.max(0, ...s.tasks.map((t) => t.sortOrder)) + 1;
+      for (const a of allocs) {
+        if (a.min <= 0) continue;
+        let taskId: string | null = null;
+        if (a.kind === "task") {
+          if (a.newTitle?.trim()) {
+            const t: Task = {
+              id: crypto.randomUUID(),
+              title: a.newTitle.trim(),
+              scheduledFor: dayKey(cursor),
+              status: "todo",
+              sortOrder: nextSort++,
+            };
+            newTasks.push(t);
+            taskId = t.id;
+          } else if (a.taskId) {
+            taskId = a.taskId;
+          } else {
+            continue; // unassigned task segment writes nothing
+          }
+        }
+        const kind: TimeEntry["kind"] = a.kind === "task" ? "work" : a.kind === "break" ? "break" : "discarded";
+        out.push({ id: crypto.randomUUID(), taskId, kind, start: cursor, end: cursor + a.min * MIN });
+        cursor += a.min * MIN;
+      }
+      return { tasks: [...s.tasks, ...newTasks], entries: [...s.entries, ...out], idleSpan: null };
     }),
 
   setView: (view) => set({ view }),
