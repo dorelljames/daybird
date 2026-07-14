@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useDaybird } from "../state/store";
 import { allocate, fractionsFromBoundaries } from "../lib/allocate";
 import { minutesBetween } from "../lib/time";
+import { sfx } from "../lib/sound";
 
 const SEGMENTS = [
   { key: "task", cls: "seg-task" },
@@ -94,7 +95,10 @@ export default function IdleSheet() {
 
           <button
             className="sheet-done"
-            onClick={() => s.resolveIdle(activeTask ? mins[0] : 0, activeTask ? mins[1] : mins[0] + mins[1], mins[2])}
+            onClick={() => {
+              sfx.resolve();
+              s.resolveIdle(activeTask ? mins[0] : 0, activeTask ? mins[1] : mins[0] + mins[1], mins[2]);
+            }}
           >
             Done
           </button>

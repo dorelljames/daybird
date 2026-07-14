@@ -5,6 +5,7 @@ import { useDaybird } from "../state/store";
 import { workedMinToday } from "../state/selectors";
 import { fmtClock, fmtMin } from "../lib/time";
 import { useAltKey } from "../hooks/useAltKey";
+import { sfx } from "../lib/sound";
 
 interface Props {
   task: Task;
@@ -60,7 +61,11 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
         whileTap={{ scale: 0.85 }}
         animate={task.status === "done" ? { scale: [1, 1.25, 1] } : { scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-        onClick={(e) => { e.stopPropagation(); s.toggleDone(task.id); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (task.status !== "done") sfx.complete();
+          s.toggleDone(task.id);
+        }}
       >
         {task.status === "done" && (
           <svg viewBox="0 0 12 12" width="12" height="12">
@@ -128,7 +133,11 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
           <button
             className={`task-play ${active ? "is-active" : ""}`}
             aria-label={active ? "pause" : "start"}
-            onClick={(e) => { e.stopPropagation(); active ? s.stopTimer() : s.startTimer(task.id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (active) { sfx.stop(); s.stopTimer(); }
+              else { sfx.start(); s.startTimer(task.id); }
+            }}
           >
             {active ? "❚❚" : "▶"}
           </button>
@@ -154,7 +163,7 @@ export default function TaskCard({ task, now, selected, reorderable = false }: P
   );
 
   return reorderable ? (
-    <Reorder.Item value={task.id} dragListener={!editing} {...rootProps}>{inner}</Reorder.Item>
+    <Reorder.Item value={task.id} dragListener={!editing} onDragEnd={() => sfx.drop()} {...rootProps}>{inner}</Reorder.Item>
   ) : (
     <motion.div {...rootProps}>{inner}</motion.div>
   );

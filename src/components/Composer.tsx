@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useDaybird } from "../state/store";
+import { sfx } from "../lib/sound";
 
 export default function Composer() {
   const s = useDaybird();
@@ -12,7 +13,10 @@ export default function Composer() {
   // on submit collapsed the composer and shifted the whole list mid-animation.
   function submit() {
     const t = title.trim();
-    if (t) s.addTask(t);
+    if (t) {
+      s.addTask(t);
+      sfx.add();
+    }
     setTitle("");
     ref.current?.focus();
   }

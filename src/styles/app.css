@@ -76,7 +76,9 @@ input { font: inherit; color: inherit; }
 .task-active:hover .task-right { opacity: 1; transform: translateX(-94px); }
 .task-est { color: var(--ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
 .task-clock { color: var(--accent); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.task-flag-static { font-size: 11px; }
+.task-flag-static { font-size: 11px; transition: opacity 0.15s; }
+/* active card keeps its clock on hover, but the passive flag would duplicate the action flag */
+.task-active:hover .task-flag-static { opacity: 0; }
 .task-flag-static.is-high { color: var(--priority); }
 .task-flag-static.is-later { color: var(--ink-3); display: inline-block; transform: rotate(90deg); }
 

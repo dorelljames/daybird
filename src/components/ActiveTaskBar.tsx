@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useDaybird } from "../state/store";
 import { openEntry } from "../state/selectors";
 import { fmtClock } from "../lib/time";
+import { sfx } from "../lib/sound";
 
 export default function ActiveTaskBar({ now }: { now: number }) {
   const s = useDaybird();
@@ -36,14 +37,14 @@ export default function ActiveTaskBar({ now }: { now: number }) {
             <button
               className="nowbar-btn"
               aria-label="pause"
-              onClick={() => s.stopTimer()}
+              onClick={() => { sfx.stop(); s.stopTimer(); }}
             >
               ❚❚
             </button>
             <button
               className="nowbar-btn nowbar-done"
               aria-label="done"
-              onClick={() => s.toggleDone(task.id)}
+              onClick={() => { sfx.complete(); s.toggleDone(task.id); }}
             >
               ✓
             </button>
