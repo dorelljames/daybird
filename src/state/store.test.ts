@@ -25,7 +25,7 @@ describe("task state", () => {
     store.getState().dropTask("t-vwra", NOW);
     const t = store.getState().tasks.find((t) => t.id === "t-vwra")!;
     expect(t.status).toBe("dropped");
-    expect(store.getState().tasks.length).toBe(6);
+    expect(store.getState().tasks.length).toBe(7);
   });
   test("completing the active task stops the timer", () => {
     store.getState().startTimer("t-journal", NOW);
@@ -160,7 +160,7 @@ describe("dayLogs", () => {
   test("groups a day's entries, finished tasks, and totals", () => {
     store.getState().toggleDone("t-journal", NOW);
     const logs = dayLogs(store.getState(), NOW);
-    expect(logs.length).toBe(1);
+    expect(logs.length).toBe(2); // seed ships a demo yesterday
     const d = logs[0];
     expect(d.day).toBe(dayKey(NOW));
     expect(d.workMin).toBe(80); // seed: journal 50m + vwra 30m
@@ -169,21 +169,18 @@ describe("dayLogs", () => {
     expect(d.estMin).toBe(15);
     expect(d.actMin).toBe(50);
   });
-  test("days sort newest first and dropped tasks list separately", () => {
+  test("days sort newest first; yesterday carries its own totals and drops list separately", () => {
     store.getState().dropTask("t-vwra", NOW);
-    const yStart = atToday(9, 0) - 24 * 60 * MIN;
-    const state = {
-      ...store.getState(),
-      entries: [
-        ...store.getState().entries,
-        { id: "y1", taskId: "t-inbox", kind: "work" as const, start: yStart, end: yStart + 30 * MIN },
-      ],
-    };
-    const logs = dayLogs(state, NOW);
+    const logs = dayLogs(store.getState(), NOW);
     expect(logs.length).toBe(2);
     expect(logs[0].day > logs[1].day).toBe(true);
     expect(logs[0].dropped.map((t) => t.id)).toEqual(["t-vwra"]);
-    expect(logs[1].workMin).toBe(30);
+    const y = logs[1];
+    expect(y.workMin).toBe(130); // 70m + 60m around a 20m break
+    expect(y.breakMin).toBe(20);
+    expect(y.finished.map((t) => t.id)).toEqual(["t-setup"]);
+    expect(y.estMin).toBe(60);
+    expect(y.actMin).toBe(130); // honest overrun: est 1h → actual 2h10m
   });
 });
 
