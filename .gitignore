@@ -1,6 +1,9 @@
 # Brainstorm companion sessions
 .superpowers/
 
+# Personal Claude Code overrides
+.claude/settings.local.json
+
 # Dependencies & build output (for when the app scaffold lands)
 node_modules/
 dist/
