@@ -273,6 +273,13 @@ input { font: inherit; color: inherit; }
   font-size: 12px;
 }
 
+/* === estimate popover === */
+.est-pop { padding: var(--sp-2); width: 216px; }
+.est-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: var(--sp-2); }
+.est-chip { padding: 5px 2px; font-size: 10.5px; text-align: center; border-radius: 7px; }
+.est-chip.is-on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.est-pop .seg-picker-new { margin: 0 0 4px; }
+
 /* === task context menu === */
 .menu-scrim { position: fixed; inset: 0; z-index: 60; }
 .menu {

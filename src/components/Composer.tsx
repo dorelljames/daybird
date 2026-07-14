@@ -35,7 +35,7 @@ export default function Composer() {
           <input
             ref={ref}
             value={title}
-            placeholder="New task…  (end with ~30m to set an estimate)"
+            placeholder="New task…"
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") submit();

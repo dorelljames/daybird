@@ -95,7 +95,7 @@ export default function TaskCard({ task, now, selected, reorderable = false, onM
           <input
             ref={editRef}
             className="task-edit"
-            defaultValue={task.estimateMin !== undefined ? `${task.title} ~${fmtMin(task.estimateMin)}` : task.title}
+            defaultValue={task.title}
             autoFocus
             onFocus={(e) => e.currentTarget.select()}
             onBlur={commitEdit}

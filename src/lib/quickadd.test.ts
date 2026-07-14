@@ -1,5 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { parseQuickAdd } from "./quickadd";
+import { parseDuration, parseQuickAdd } from "./quickadd";
+
+describe("parseDuration", () => {
+  test("parses minutes, hours, combined, and bare numbers", () => {
+    expect(parseDuration("30m")).toBe(30);
+    expect(parseDuration("1h")).toBe(60);
+    expect(parseDuration("1h 20m")).toBe(80);
+    expect(parseDuration("45")).toBe(45);
+  });
+  test("rejects junk and zero", () => {
+    expect(parseDuration("soon")).toBeUndefined();
+    expect(parseDuration("0m")).toBeUndefined();
+    expect(parseDuration("")).toBeUndefined();
+  });
+});
 
 describe("parseQuickAdd", () => {
   test("trailing ~Nm sets an estimate", () => {
